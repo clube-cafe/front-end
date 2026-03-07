@@ -3,7 +3,7 @@ import { authService } from '../../services/api';
 import './Login.css';
 
 interface LoginProps {
-  onSuccess?: (userId: string) => void;
+  onSuccess?: (userId: string, userType: 'ADMIN' | 'ASSINANTE') => void;
   onSwitchToRegister?: () => void;
 }
 
@@ -35,7 +35,8 @@ export default function Login({ onSuccess, onSwitchToRegister }: LoginProps) {
       localStorage.setItem('userId', response.user.id);
       
       if (onSuccess) {
-        onSuccess(response.user.id);
+        // ✅ Passar o tipo de usuário
+        onSuccess(response.user.id, response.user.tipo_user);
       }
     } catch (err: any) {
       if (err.response?.status === 400) {

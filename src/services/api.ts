@@ -202,23 +202,6 @@ export const pagamentoPendenteService = {
   }
 };
 
-export const planoService = {
-  getAllPlanos: async (): Promise<PlanoAssinatura[]> => {
-    const response = await api.get('/planos');
-    return response.data;
-  },
-
-  getPlanosAtivos: async (): Promise<PlanoAssinatura[]> => {
-    const response = await api.get('/planos/ativos');
-    return response.data;
-  },
-
-  getPlanoById: async (id: string): Promise<PlanoAssinatura> => {
-    const response = await api.get(`/planos/${id}`);
-    return response.data;
-  },
-};
-
 export const assinaturaService = {
   getAllAssinaturas: async (): Promise<Assinatura[]> => {
     const response = await api.get<Assinatura[]>('/assinaturas');
@@ -328,6 +311,50 @@ export const pagamentoService = {
       observacao,
     });
     return response.data;
+  },
+};
+
+export const planoService = {
+  getAllPlanos: async (): Promise<PlanoAssinatura[]> => {
+    const response = await api.get('/planos');
+    return response.data;
+  },
+
+  getPlanosAtivos: async (): Promise<PlanoAssinatura[]> => {
+    const response = await api.get('/planos/ativos');
+    return response.data;
+  },
+
+  getPlanoById: async (id: string): Promise<PlanoAssinatura> => {
+    const response = await api.get(`/planos/${id}`);
+    return response.data;
+  },
+
+  // ✅ ADICIONAR ESTES MÉTODOS:
+  createPlano: async (data: {
+    nome: string;
+    descricao: string;
+    valor: number;
+    periodicidade: 'MENSAL' | 'TRIMESTRAL' | 'SEMESTRAL' | 'ANUAL';
+    ativo: boolean;
+  }): Promise<PlanoAssinatura> => {
+    const response = await api.post('/planos', data);
+    return response.data;
+  },
+
+  updatePlano: async (id: string, data: {
+    nome?: string;
+    descricao?: string;
+    valor?: number;
+    periodicidade?: 'MENSAL' | 'TRIMESTRAL' | 'SEMESTRAL' | 'ANUAL';
+    ativo?: boolean;
+  }): Promise<PlanoAssinatura> => {
+    const response = await api.put(`/planos/${id}`, data);
+    return response.data;
+  },
+
+  deletePlano: async (id: string): Promise<void> => {
+    await api.delete(`/planos/${id}`);
   },
 };
 
