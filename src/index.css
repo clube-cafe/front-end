@@ -11,6 +11,58 @@
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  /* ========== PALETA DO LOGOTIPO - CLUBE DO CAFÉ LSD ========== */
+
+  /* Marrom escuro (texto e máquina do logo) */
+  --color-primary: #3E2723;
+  --color-primary-light: #5D4037;
+  --color-primary-dark: #2C1A12;
+
+  /* Laranja queimado / Sienna (faixa central do logo) */
+  --color-secondary: #BF6A30;
+  --color-secondary-light: #D4883E;
+  --color-secondary-dark: #A0571F;
+
+  /* Âmbar / Dourado (faixa direita do logo) */
+  --color-accent: #D4A629;
+  --color-accent-light: #E0BC4E;
+  --color-accent-dark: #B8901F;
+
+  /* Marsala / Vermelho escuro (faixa esquerda do logo) */
+  --color-maroon: #7B2D26;
+  --color-maroon-light: #9B3C34;
+  --color-maroon-dark: #5C1F1A;
+
+  /* Fundos */
+  --bg-cream: #FAF6F1;
+  --bg-warm-gray: #F5EDE3;
+  --bg-white: #FFFFFF;
+
+  /* Texto */
+  --text-dark: #3E2723;
+  --text-medium: #6D4C41;
+  --text-light: #8D6E63;
+  --text-muted: #A1887F;
+
+  /* Bordas */
+  --border-color: #E8DDD3;
+  --border-light: #F0E8DE;
+
+  /* Status */
+  --color-success: #2E7D32;
+  --color-success-light: #4CAF50;
+  --color-warning: #E6A817;
+  --color-danger: #7B2D26;
+  --color-info: #BF6A30;
+
+  /* Gradientes */
+  --gradient-primary: linear-gradient(135deg, #3E2723 0%, #5D4037 100%);
+  --gradient-secondary: linear-gradient(135deg, #BF6A30 0%, #D4A629 100%);
+  --gradient-accent: linear-gradient(135deg, #D4A629 0%, #BF6A30 100%);
+  --gradient-success: linear-gradient(135deg, #2E7D32 0%, #4CAF50 100%);
+  --gradient-danger: linear-gradient(135deg, #7B2D26 0%, #9B3C34 100%);
+  --gradient-warning: linear-gradient(135deg, #D4A629 0%, #BF6A30 100%);
 }
 
 html, body {

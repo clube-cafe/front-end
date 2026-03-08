@@ -1,7 +1,7 @@
 .dashboard-container {
   display: flex;
   min-height: 100vh;
-  background: #f5f7fa;
+  background: var(--bg-cream);
 }
 
 .dashboard-content {
@@ -24,7 +24,7 @@
 }
 
 .dashboard-header h2 {
-  color: #3498db;
+  color: var(--color-secondary);
   font-size: 2rem;
   font-weight: 700;
   margin: 0;
@@ -46,11 +46,11 @@
 
 /* ===== ASSINATURA OVERVIEW ===== */
 .subscription-overview {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--gradient-primary);
   border-radius: 12px;
   padding: 1.5rem;
   color: white;
-  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.25);
+  box-shadow: 0 4px 16px rgba(62, 39, 35, 0.3);
   animation: slideIn 0.5s ease;
 }
 
@@ -118,7 +118,7 @@
 
 .manage-subscription-btn {
   background: white;
-  color: #667eea;
+  color: var(--color-primary);
   border: none;
   padding: 0.75rem 1.5rem;
   border-radius: 8px;
@@ -162,7 +162,7 @@
 }
 
 .subscribe-now-btn {
-  background: #3498db;
+  background: var(--color-secondary);
   color: white;
   border: none;
   padding: 0.75rem 1.5rem;
@@ -174,9 +174,9 @@
 }
 
 .subscribe-now-btn:hover {
-  background: #2980b9;
+  background: var(--color-secondary-dark);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+  box-shadow: 0 4px 12px rgba(191, 106, 48, 0.3);
 }
 
 /* ===== BENEFÍCIOS DA ASSINATURA ===== */
@@ -212,7 +212,7 @@
 .benefit-item:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  background: #e3f2fd;
+  background: rgba(191, 106, 48, 0.08);
 }
 
 .benefit-icon {
@@ -284,10 +284,10 @@
 }
 
 .link-btn:hover {
-  border-color: #3498db;
-  background: #e3f2fd;
+  border-color: var(--color-secondary);
+  background: rgba(191, 106, 48, 0.08);
   transform: translateY(-2px);
-  box-shadow: 0 3px 8px rgba(52, 152, 219, 0.2);
+  box-shadow: 0 3px 8px rgba(191, 106, 48, 0.2);
 }
 
 /* ===== ANIMAÇÕES ===== */

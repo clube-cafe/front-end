@@ -70,7 +70,7 @@
   }
   
   .payment-value .value {
-    color: #2c5530;
+    color: var(--color-secondary);
     font-size: 28px;
     font-weight: bold;
   }
@@ -106,7 +106,7 @@
     width: 30px;
     height: 30px;
     border: 3px solid #f3f3f3;
-    border-top: 3px solid #2c5530;
+    border-top: 3px solid var(--color-secondary);
     border-radius: 50%;
     animation: spin 1s linear infinite;
   }
@@ -147,7 +147,7 @@
   }
   
   .copy-btn {
-    background: #2c5530;
+    background: var(--color-secondary);
     color: white;
     border: none;
     padding: 10px 20px;
@@ -158,11 +158,11 @@
   }
   
   .copy-btn:hover {
-    background: #1e3d21;
+    background: var(--color-secondary-dark);
   }
   
   .payment-instructions {
-    background: #f0f7f1;
+    background: rgba(191, 106, 48, 0.08);
     padding: 15px;
     border-radius: 8px;
     margin-bottom: 20px;
@@ -170,7 +170,7 @@
   
   .payment-instructions h4 {
     margin: 0 0 10px 0;
-    color: #2c5530;
+    color: var(--color-secondary);
   }
   
   .payment-instructions ol {
@@ -201,12 +201,12 @@
   }
   
   .confirm-btn {
-    background: #2c5530;
+    background: var(--color-secondary);
     color: white;
   }
   
   .confirm-btn:hover:not(:disabled) {
-    background: #1e3d21;
+    background: var(--color-secondary-dark);
   }
   
   .confirm-btn:disabled {

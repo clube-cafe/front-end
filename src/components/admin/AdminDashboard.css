@@ -1,7 +1,7 @@
 .admin-dashboard-container {
     display: flex;
     min-height: 100vh;
-    background: #f5f5f5;
+    background: var(--bg-cream);
   }
   
   .admin-content {
@@ -11,9 +11,9 @@
   }
   
   .admin-header {
-    background: white;
+    background: var(--color-primary);
     padding: 20px 30px;
-    border-bottom: 1px solid #e0e0e0;
+    border-bottom: 1px solid var(--border-color);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -21,7 +21,7 @@
   
   .admin-header h1 {
     margin: 0;
-    color: #333;
+    color: white;
     font-size: 24px;
   }
   
@@ -32,12 +32,12 @@
   }
   
   .admin-user-info span {
-    color: #666;
+    color: rgba(255, 255, 255, 0.8);
     font-size: 14px;
   }
   
   .admin-badge {
-    background: #dc3545;
+    background: var(--color-maroon);
     color: white;
     padding: 4px 12px;
     border-radius: 12px;

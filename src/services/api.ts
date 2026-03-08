@@ -133,6 +133,11 @@ export const userService = {
     return response.data;
   },
 
+  createUser: async (data: { nome: string; email: string; password: string }): Promise<User> => {
+    const response = await api.post<{ user: User }>('/auth/register', data);
+    return response.data.user;
+  },
+
   updateUser: async (id: string, userData: Partial<{
     nome: string;
     email: string;

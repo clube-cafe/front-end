@@ -170,7 +170,7 @@ export default function AdminPlans() {
             setShowForm(true);
           }}
         >
-          ➕ Novo Plano
+          <span className="btn-icon">+</span> Novo Plano
         </button>
       </div>
 

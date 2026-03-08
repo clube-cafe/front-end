@@ -17,15 +17,15 @@
   }
   
   .payments-stats .stat-card.success {
-    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    background: var(--gradient-success);
   }
   
   .payments-stats .stat-card.warning {
-    background: linear-gradient(135deg, #fdc830 0%, #f37335 100%);
+    background: var(--gradient-warning);
   }
   
   .payments-stats .stat-card.danger {
-    background: linear-gradient(135deg, #ee0979 0%, #ff6a00 100%);
+    background: var(--gradient-danger);
   }
   
   .stat-total {
@@ -60,8 +60,8 @@
   }
   
   .tab.active {
-    color: #3498db;
-    border-bottom-color: #3498db;
+    color: var(--color-secondary);
+    border-bottom-color: var(--color-secondary);
   }
   
   .payments-table-container {
@@ -102,8 +102,8 @@
   }
   
   .payment-method {
-    background: #e3f2fd;
-    color: #1976d2;
+    background: rgba(191, 106, 48, 0.12);
+    color: var(--color-secondary);
     padding: 4px 12px;
     border-radius: 12px;
     font-size: 12px;
@@ -121,7 +121,7 @@
   }
   
   .overdue-label {
-    color: #e74c3c;
+    color: var(--color-maroon);
     font-weight: 600;
     font-size: 12px;
   }
