@@ -58,7 +58,6 @@ export default function AdminSidebar({ activeView, setActiveView, onLogout }: Ad
       </nav>
 
       <button className="admin-logout-btn" onClick={onLogout}>
-        <span>🚪</span>
         Sair
       </button>
     </aside>

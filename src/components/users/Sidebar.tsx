@@ -33,7 +33,6 @@ export default function Sidebar({ activeView, setActiveView, onLogout }: Sidebar
       </nav>
 
       <button className="logout-btn" onClick={onLogout}>
-        <span>🚪</span>
         <span>Sair</span>
       </button>
     </aside>

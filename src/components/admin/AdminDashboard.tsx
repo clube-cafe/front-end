@@ -33,7 +33,6 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
           <h1>Painel Administrativo</h1>
           <div className="admin-user-info">
             <span>👤 {adminName}</span>
-            <span className="admin-badge">ADMIN</span>
           </div>
         </header>
 
