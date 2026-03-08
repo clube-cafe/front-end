@@ -4,6 +4,7 @@ import AdminUsers from './AdminUsers';
 import AdminSubscriptions from './AdminSubscriptions';
 import AdminPayments from './AdminPayments';
 import AdminPlans from './AdminPlans';
+import AdminFinanceiro from './AdminFinanceiro';
 import { authService } from '../../services/api';
 import './AdminDashboard.css';
 
@@ -11,7 +12,7 @@ interface AdminDashboardProps {
   onLogout: () => void;
 }
 
-type AdminView = 'users' | 'subscriptions' | 'payments' | 'plans';
+type AdminView = 'users' | 'subscriptions' | 'payments' | 'plans' | 'financeiro';
 
 export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [activeView, setActiveView] = useState<AdminView>('users');
@@ -40,7 +41,8 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
           {activeView === 'users' && <AdminUsers />}
           {activeView === 'subscriptions' && <AdminSubscriptions />}
           {activeView === 'payments' && <AdminPayments />}
-          {activeView === 'plans' && <AdminPlans />} 
+          {activeView === 'plans' && <AdminPlans />}
+          {activeView === 'financeiro' && <AdminFinanceiro />} 
         </div>
       </div>
     </div>

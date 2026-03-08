@@ -1,8 +1,8 @@
 import './AdminSidebar.css';
 
 interface AdminSidebarProps {
-  activeView: 'users' | 'subscriptions' | 'payments' | 'plans';
-  setActiveView: (view: 'users' | 'subscriptions' | 'payments' | 'plans') => void;
+  activeView: 'users' | 'subscriptions' | 'payments' | 'plans' | 'financeiro';
+  setActiveView: (view: 'users' | 'subscriptions' | 'payments' | 'plans' | 'financeiro') => void;
   onLogout: () => void;
 }
 
@@ -45,6 +45,14 @@ export default function AdminSidebar({ activeView, setActiveView, onLogout }: Ad
         >
           <span className="nav-icon">📦</span>
           <span>Planos</span>
+        </button>
+
+        <button
+          className={`admin-nav-item ${activeView === 'financeiro' ? 'active' : ''}`}
+          onClick={() => setActiveView('financeiro')}
+        >
+          <span className="nav-icon">📊</span>
+          <span>Financeiro</span>
         </button>
       </nav>
 

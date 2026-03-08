@@ -349,4 +349,62 @@ export const planoService = {
   },
 };
 
+export interface Historico {
+  id: string;
+  user_id: string;
+  tipo: 'ENTRADA' | 'SAIDA';
+  valor: number;
+  data: string;
+  descricao: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export const historicoService = {
+  getAllHistoricos: async (): Promise<Historico[]> => {
+    const response = await api.get<Historico[]>('/historicos');
+    return response.data;
+  },
+
+  getHistoricoById: async (id: string): Promise<Historico> => {
+    const response = await api.get<Historico>(`/historicos/${id}`);
+    return response.data;
+  },
+
+  getHistoricosByTipo: async (tipo: 'ENTRADA' | 'SAIDA'): Promise<Historico[]> => {
+    const response = await api.get<Historico[]>(`/historicos/tipo/${tipo}`);
+    return response.data;
+  },
+
+  createHistorico: async (data: {
+    user_id: string;
+    tipo: 'ENTRADA' | 'SAIDA';
+    valor: number;
+    data: string;
+    descricao: string;
+  }): Promise<Historico> => {
+    const response = await api.post<Historico>('/historicos', data);
+    return response.data;
+  },
+
+  getTotalEntradas: async (): Promise<{ total: number }> => {
+    const response = await api.get<{ total: number }>('/historicos/total/entradas');
+    return response.data;
+  },
+
+  getTotalSaidas: async (): Promise<{ total: number }> => {
+    const response = await api.get<{ total: number }>('/historicos/total/saidas');
+    return response.data;
+  },
+
+  getSaldo: async (): Promise<{ saldo: number }> => {
+    const response = await api.get<{ saldo: number }>('/historicos/saldo');
+    return response.data;
+  },
+
+  deleteHistorico: async (id: string): Promise<void> => {
+    await api.delete(`/historicos/${id}`);
+  },
+};
+
 export default api;
