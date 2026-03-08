@@ -4,22 +4,25 @@ import type { Assinatura, PlanoAssinatura } from '../../types/assinatura';
 import './Subscription.css';
 import { authService } from '../../services/api';
 import PaymentModal from './PaymentModal';
+import ConfirmModal from '../common/ConfirmModal';
 
 interface SubscriptionProps {
   onAssinaturaChange?: () => void;
+  showFormOnLoad?: boolean;
 }
 
-export default function Subscription({ onAssinaturaChange }: SubscriptionProps) {
+export default function Subscription({ onAssinaturaChange, showFormOnLoad = false }: SubscriptionProps) {
   const [assinaturas, setAssinaturas] = useState<Assinatura[]>([]);
   const [planos, setPlanos] = useState<PlanoAssinatura[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
+  const [showForm, setShowForm] = useState(showFormOnLoad);
   const [formData, setFormData] = useState({
     plano_id: ''
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [confirmModal, setConfirmModal] = useState<{ show: boolean; id: string }>({ show: false, id: '' });
   const [pendingPayment, setPendingPayment] = useState<{
     id: string;
     valor: number;
@@ -174,9 +177,13 @@ export default function Subscription({ onAssinaturaChange }: SubscriptionProps) 
     }
   };
 
-  const handleCancelar = async (id: string) => {
-    if (!confirm('Tem certeza que deseja cancelar esta assinatura?')) return;
+  const handleCancelar = (id: string) => {
+    setConfirmModal({ show: true, id });
+  };
 
+  const confirmCancelar = async () => {
+    const id = confirmModal.id;
+    setConfirmModal({ show: false, id: '' });
     try {
       await assinaturaService.cancelarAssinatura(id);
       setSuccess('Assinatura cancelada com sucesso!');
@@ -351,7 +358,7 @@ export default function Subscription({ onAssinaturaChange }: SubscriptionProps) 
                       className="delete-btn"
                       onClick={() => handleCancelar(assinatura.id)}
                     >
-                      🗑️ Cancelar Assinatura
+                      Cancelar Assinatura
                     </button>
                   )}
                 </div>
@@ -367,6 +374,19 @@ export default function Subscription({ onAssinaturaChange }: SubscriptionProps) 
           valor={pendingPayment.valor}
           onSuccess={handlePaymentSuccess}
           onCancel={handlePaymentCancel}
+        />
+      )}
+
+      {confirmModal.show && (
+        <ConfirmModal
+          icon="⚠️"
+          title="Cancelar Assinatura"
+          message="Tem certeza que deseja cancelar esta assinatura? Esta ação não pode ser desfeita."
+          confirmText="Sim, cancelar"
+          cancelText="Não, manter"
+          variant="danger"
+          onConfirm={confirmCancelar}
+          onCancel={() => setConfirmModal({ show: false, id: '' })}
         />
       )}
     </div>

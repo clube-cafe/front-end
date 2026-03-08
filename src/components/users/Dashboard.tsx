@@ -11,6 +11,7 @@ interface DashboardProps {
 
 export default function Dashboard({ onLogout }: DashboardProps) {
   const [activeView, setActiveView] = useState<'home' | 'subscription'>('home');
+  const [showPlansOnLoad, setShowPlansOnLoad] = useState(false);
   const [loading, setLoading] = useState(true);
   const [assinaturas, setAssinaturas] = useState<Assinatura[]>([]);
   const [planos, setPlanos] = useState<PlanoAssinatura[]>([]);
@@ -181,39 +182,20 @@ export default function Dashboard({ onLogout }: DashboardProps) {
                     <p>Assine agora e tenha acesso a todos os benefícios!</p>
                     <button 
                       className="subscribe-now-btn"
-                      onClick={() => setActiveView('subscription')}
+                      onClick={() => { setShowPlansOnLoad(true); setActiveView('subscription'); }}
                     >
                       Ver Planos Disponíveis
                     </button>
                   </div>
                 )}
 
-                <div className="useful-links">
-                  <h3>Links úteis</h3>
-                  <div className="links-grid">
-                    <button className="link-btn">
-                      <span>💬</span> CHAT
-                    </button>
-                    <button className="link-btn">
-                      <span>📘</span> FACEBOOK
-                    </button>
-                    <button className="link-btn">
-                      <span>📷</span> INSTAGRAM
-                    </button>
-                    <button className="link-btn">
-                      <span>🌐</span> SITE
-                    </button>
-                    <button className="link-btn">
-                      <span>📄</span> CONTRATOS
-                    </button>
-                  </div>
-                </div>
+
               </div>
             )}
           </>
         )}
 
-        {activeView === 'subscription' && <Subscription onAssinaturaChange={loadData} />}
+        {activeView === 'subscription' && <Subscription onAssinaturaChange={loadData} showFormOnLoad={showPlansOnLoad} />}
       </div>
     </div>
   );

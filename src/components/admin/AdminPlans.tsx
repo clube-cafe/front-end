@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { planoService } from '../../services/api';
 import type { PlanoAssinatura } from '../../types/assinatura';
 import './AdminPlans.css';
+import ConfirmModal from '../common/ConfirmModal';
 
 export default function AdminPlans() {
   const [planos, setPlanos] = useState<PlanoAssinatura[]>([]);
@@ -16,6 +17,7 @@ export default function AdminPlans() {
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [confirmModal, setConfirmModal] = useState<{ show: boolean; plano: PlanoAssinatura | null }>({ show: false, plano: null });
 
   useEffect(() => {
     loadPlanos();
@@ -66,11 +68,16 @@ export default function AdminPlans() {
     }
   };
 
-  const handleToggleAtivo = async (plano: PlanoAssinatura) => {
+  const handleToggleAtivo = (plano: PlanoAssinatura) => {
+    setConfirmModal({ show: true, plano });
+  };
+
+  const confirmToggleAtivo = async () => {
+    const plano = confirmModal.plano;
+    setConfirmModal({ show: false, plano: null });
+    if (!plano) return;
     const novoStatus = !plano.ativo;
     const acao = novoStatus ? 'ativar' : 'desativar';
-    if (!confirm(`Tem certeza que deseja ${acao} o plano "${plano.nome}"?`)) return;
-
     try {
       await planoService.updatePlano(plano.id, { ativo: novoStatus });
       setSuccess(`Plano ${novoStatus ? 'ativado' : 'desativado'} com sucesso!`);
@@ -281,6 +288,19 @@ export default function AdminPlans() {
         <div className="no-data">
           <p>Nenhum plano cadastrado. Clique em "Novo Plano" para começar.</p>
         </div>
+      )}
+
+      {confirmModal.show && confirmModal.plano && (
+        <ConfirmModal
+          icon={confirmModal.plano.ativo ? '⏸️' : '▶️'}
+          title={confirmModal.plano.ativo ? 'Desativar Plano' : 'Ativar Plano'}
+          message={`Tem certeza que deseja ${confirmModal.plano.ativo ? 'desativar' : 'ativar'} o plano "${confirmModal.plano.nome}"?`}
+          confirmText={confirmModal.plano.ativo ? 'Desativar' : 'Ativar'}
+          cancelText="Cancelar"
+          variant={confirmModal.plano.ativo ? 'danger' : 'success'}
+          onConfirm={confirmToggleAtivo}
+          onCancel={() => setConfirmModal({ show: false, plano: null })}
+        />
       )}
     </div>
   );

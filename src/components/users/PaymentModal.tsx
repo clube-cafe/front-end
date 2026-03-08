@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { pagamentoService } from '../../services/api';
 import './PaymentModal.css';
+import ConfirmModal from '../common/ConfirmModal';
 
 interface PaymentModalProps {
   pagamentoId: string;
@@ -19,6 +20,8 @@ export default function PaymentModal({
   const [error, setError] = useState('');
   const [qrCodeData, setQrCodeData] = useState('');
   const [pixCopiaECola, setPixCopiaECola] = useState('');
+  const [showConfirmPayment, setShowConfirmPayment] = useState(false);
+  const [showCopiedAlert, setShowCopiedAlert] = useState(false);
 
   useEffect(() => {
     generateQRCode();
@@ -45,11 +48,15 @@ export default function PaymentModal({
 
   const handleCopyPix = () => {
     navigator.clipboard.writeText(pixCopiaECola);
-    alert('Código PIX copiado!');
+    setShowCopiedAlert(true);
   };
 
-  const handleConfirmManualPayment = async () => {
-    if (!confirm('Confirmar que o pagamento foi realizado?')) return;
+  const handleConfirmManualPayment = () => {
+    setShowConfirmPayment(true);
+  };
+
+  const executePayment = async () => {
+    setShowConfirmPayment(false);
 
     try {
       setLoading(true);
@@ -154,6 +161,31 @@ export default function PaymentModal({
             </>
           )}
         </div>
+
+        {showConfirmPayment && (
+          <ConfirmModal
+            icon="💳"
+            title="Confirmar Pagamento"
+            message="Confirmar que o pagamento foi realizado?"
+            confirmText="Sim, já paguei"
+            cancelText="Voltar"
+            variant="success"
+            onConfirm={executePayment}
+            onCancel={() => setShowConfirmPayment(false)}
+          />
+        )}
+
+        {showCopiedAlert && (
+          <ConfirmModal
+            icon="✅"
+            title="Copiado!"
+            message="Código PIX copiado para a área de transferência."
+            confirmText="OK"
+            variant="success"
+            alertMode
+            onConfirm={() => setShowCopiedAlert(false)}
+          />
+        )}
       </div>
     </div>
   );
