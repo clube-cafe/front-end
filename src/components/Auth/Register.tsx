@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { authService } from '../../services/api';
+import cafeLogo from '../../assets/Clube do Café.png';
 import './Register.css';
 
 interface RegisterProps {
@@ -69,7 +70,7 @@ export default function Register({ onSuccess, onSwitchToLogin }: RegisterProps) 
       <div className="success-container">
         <div className="success-icon">✓</div>
         <h2>Cadastro realizado com sucesso!</h2>
-        <p>Bem-vindo ao Clube do Café ☕</p>
+        <p>Bem-vindo ao Clube do Café <img src={cafeLogo} alt="" className="logo-inline" /></p>
       </div>
     );
   }
@@ -78,7 +79,7 @@ export default function Register({ onSuccess, onSwitchToLogin }: RegisterProps) 
     <div className="auth-container">
       <div className="auth-card">
         <div className="auth-header">
-          <h1>☕ Clube do Café</h1>
+          <h1><img src={cafeLogo} alt="Clube do Café" className="logo-inline" /> Clube do Café</h1>
           <h2>Criar Conta</h2>
           <p>Junte-se ao nosso clube exclusivo de café</p>
         </div>

@@ -532,7 +532,7 @@ export default function AdminFinanceiro() {
               </div>
 
               <button type="submit" className="btn-submit" disabled={pagLoading}>
-                {pagLoading ? 'Registrando...' : '✅ Registrar Pagamento'}
+                {pagLoading ? 'Registrando...' : 'Registrar Pagamento'}
               </button>
             </form>
           </div>
@@ -638,7 +638,7 @@ export default function AdminFinanceiro() {
               </div>
 
               <button type="submit" className="btn-submit saida" disabled={compraLoading}>
-                {compraLoading ? 'Registrando...' : '🛒 Registrar Compra'}
+                {compraLoading ? 'Registrando...' : 'Registrar Compra'}
               </button>
             </form>
           </div>

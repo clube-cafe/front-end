@@ -323,8 +323,8 @@
     margin-top: 15px;
   }
   
-  .edit-btn,
-  .delete-btn {
+.deactivate-btn,
+  .activate-btn {
     flex: 1;
     padding: 10px;
     border: none;
@@ -334,23 +334,23 @@
     cursor: pointer;
     transition: all 0.3s;
   }
-  
-  .edit-btn {
-    background: var(--color-secondary);
-    color: white;
-  }
-  
-  .edit-btn:hover {
-    background: var(--color-secondary-dark);
-  }
-  
-  .delete-btn {
+
+  .deactivate-btn {
     background: var(--color-maroon);
     color: white;
   }
-  
-  .delete-btn:hover {
+
+  .deactivate-btn:hover {
     background: var(--color-maroon-dark);
+  }
+
+  .activate-btn {
+    background: var(--color-success);
+    color: white;
+  }
+
+  .activate-btn:hover {
+    background: var(--color-success-light);
   }
   
   .error-message,

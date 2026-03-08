@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { authService } from '../../services/api';
+import cafeLogo from '../../assets/Clube do Café.png';
 import './Login.css';
 
 interface LoginProps {
@@ -55,7 +56,7 @@ export default function Login({ onSuccess, onSwitchToRegister }: LoginProps) {
     <div className="auth-container">
       <div className="auth-card">
         <div className="auth-header">
-          <h1>☕ Clube do Café</h1>
+          <h1><img src={cafeLogo} alt="Clube do Café" className="logo-inline" /> Clube do Café</h1>
           <p>Entre para acessar sua conta</p>
         </div>
 

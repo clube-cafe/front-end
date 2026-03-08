@@ -1,3 +1,4 @@
+import cafeLogo from '../../assets/Clube do Café.png';
 import './Sidebar.css';
 
 interface SidebarProps {
@@ -10,7 +11,7 @@ export default function Sidebar({ activeView, setActiveView, onLogout }: Sidebar
   return (
     <aside className="sidebar">
       <div className="sidebar-logo">
-        <h1>☕ Clube do Café</h1>
+        <h1><img src={cafeLogo} alt="Clube do Café" className="logo-inline" /> Clube do Café</h1>
       </div>
 
       <nav className="sidebar-nav">

@@ -15,7 +15,7 @@
   /* ========== PALETA DO LOGOTIPO - CLUBE DO CAFÉ LSD ========== */
 
   /* Marrom escuro (texto e máquina do logo) */
-  --color-primary: #3E2723;
+  --color-primary: #523f3c;
   --color-primary-light: #5D4037;
   --color-primary-dark: #2C1A12;
 
@@ -84,4 +84,13 @@ body {
 
 button {
   font-family: inherit;
+}
+
+/* Logo inline (substitui emoji ☕) */
+.logo-inline {
+  height: 1.2em;
+  width: auto;
+  vertical-align: middle;
+  display: inline;
+  object-fit: contain;
 }

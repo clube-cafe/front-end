@@ -1,3 +1,4 @@
+import cafeLogo from '../../assets/Clube do Café.png';
 import './AdminSidebar.css';
 
 interface AdminSidebarProps {
@@ -10,7 +11,7 @@ export default function AdminSidebar({ activeView, setActiveView, onLogout }: Ad
   return (
     <aside className="admin-sidebar">
       <div className="admin-sidebar-header">
-        <h2>☕ Clube do Café</h2>
+        <h2><img src={cafeLogo} alt="Clube do Café" className="logo-inline" /> Clube do Café</h2>
         <span className="admin-tag">Admin</span>
       </div>
 

@@ -7,7 +7,6 @@ export default function AdminPlans() {
   const [planos, setPlanos] = useState<PlanoAssinatura[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [editingPlan, setEditingPlan] = useState<PlanoAssinatura | null>(null);
   const [formData, setFormData] = useState({
     nome: '',
     descricao: '',
@@ -52,28 +51,14 @@ export default function AdminPlans() {
     }
 
     try {
-      if (editingPlan) {
-        // Atualizar plano existente
-        await planoService.updatePlano(editingPlan.id, {
-          nome: formData.nome,
-          descricao: formData.descricao,
-          valor: valorNumerico,
-          periodicidade: formData.periodicidade as any,
-          ativo: formData.ativo
-        });
-        setSuccess('Plano atualizado com sucesso!');
-      } else {
-        // Criar novo plano
-        await planoService.createPlano({
-          nome: formData.nome,
-          descricao: formData.descricao,
-          valor: valorNumerico,
-          periodicidade: formData.periodicidade as any,
-          ativo: formData.ativo
-        });
-        setSuccess('Plano criado com sucesso!');
-      }
-
+      await planoService.createPlano({
+        nome: formData.nome,
+        descricao: formData.descricao,
+        valor: valorNumerico,
+        periodicidade: formData.periodicidade as any,
+        ativo: formData.ativo
+      });
+      setSuccess('Plano criado com sucesso!');
       resetForm();
       loadPlanos();
     } catch (err: any) {
@@ -81,27 +66,17 @@ export default function AdminPlans() {
     }
   };
 
-  const handleEdit = (plano: PlanoAssinatura) => {
-    setEditingPlan(plano);
-    setFormData({
-      nome: plano.nome,
-      descricao: plano.descricao || '',
-      valor: plano.valor.toString(),
-      periodicidade: plano.periodicidade,
-      ativo: plano.ativo
-    });
-    setShowForm(true);
-  };
-
-  const handleDelete = async (id: string, nome: string) => {
-    if (!confirm(`Tem certeza que deseja deletar o plano "${nome}"?`)) return;
+  const handleToggleAtivo = async (plano: PlanoAssinatura) => {
+    const novoStatus = !plano.ativo;
+    const acao = novoStatus ? 'ativar' : 'desativar';
+    if (!confirm(`Tem certeza que deseja ${acao} o plano "${plano.nome}"?`)) return;
 
     try {
-      await planoService.deletePlano(id);
-      setSuccess('Plano deletado com sucesso!');
+      await planoService.updatePlano(plano.id, { ativo: novoStatus });
+      setSuccess(`Plano ${novoStatus ? 'ativado' : 'desativado'} com sucesso!`);
       loadPlanos();
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Erro ao deletar plano');
+      setError(err.response?.data?.message || `Erro ao ${acao} plano`);
     }
   };
 
@@ -113,7 +88,6 @@ export default function AdminPlans() {
       periodicidade: 'MENSAL',
       ativo: true
     });
-    setEditingPlan(null);
     setShowForm(false);
   };
 
@@ -178,7 +152,7 @@ export default function AdminPlans() {
         <div className="plan-form-modal">
           <div className="plan-form-card">
             <div className="form-header">
-              <h3>{editingPlan ? 'Editar Plano' : 'Criar Novo Plano'}</h3>
+              <h3>Criar Novo Plano</h3>
               <button className="close-btn" onClick={resetForm}>✕</button>
             </div>
 
@@ -253,7 +227,7 @@ export default function AdminPlans() {
                   Cancelar
                 </button>
                 <button type="submit" className="submit-btn">
-                  {editingPlan ? 'Atualizar Plano' : 'Criar Plano'}
+                  Criar Plano
                 </button>
               </div>
             </form>
@@ -293,16 +267,10 @@ export default function AdminPlans() {
 
             <div className="plan-actions">
               <button 
-                className="edit-btn"
-                onClick={() => handleEdit(plano)}
+                className={plano.ativo ? 'deactivate-btn' : 'activate-btn'}
+                onClick={() => handleToggleAtivo(plano)}
               >
-                Editar
-              </button>
-              <button 
-                className="delete-btn"
-                onClick={() => handleDelete(plano.id, plano.nome)}
-              >
-                Deletar
+                {plano.ativo ? 'Desativar' : 'Ativar'}
               </button>
             </div>
           </div>
