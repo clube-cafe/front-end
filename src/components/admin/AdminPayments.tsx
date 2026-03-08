@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react';
-import { pagamentoService, userService, pagamentoPendenteService } from '../../services/api';
-import type { Pagamento, PagamentoPendente } from '../../types/payments';
+import { pagamentoService, userService } from '../../services/api';
+import type { Pagamento } from '../../types/payments';
 import type { User } from '../../types/user';
 import './AdminPayments.css';
 
 export default function AdminPayments() {
   const [pagamentos, setPagamentos] = useState<Pagamento[]>([]);
-  const [pendentes, setPendentes] = useState<PagamentoPendente[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'realizados' | 'pendentes'>('realizados');
@@ -18,14 +17,12 @@ export default function AdminPayments() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [pagamentosData, pendentesData, usersData] = await Promise.all([
+      const [pagamentosData, usersData] = await Promise.all([
         pagamentoService.getAllPagamentos(),
-        pagamentoPendenteService.getAllPagamentosPendentes(),
         userService.getAllUsers()
       ]);
       
       setPagamentos(pagamentosData);
-      setPendentes(pendentesData);
       setUsers(usersData);
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
@@ -33,6 +30,9 @@ export default function AdminPayments() {
       setLoading(false);
     }
   };
+
+  const realizados = pagamentos.filter(p => p.status === 'PAGO');
+  const pendentes = pagamentos.filter(p => p.status === 'PENDENTE' || p.status === 'ATRASADO');
 
   const getUserById = (userId: string) => {
     return users.find(u => u.id === userId);
@@ -63,8 +63,8 @@ export default function AdminPayments() {
     return labels[status] || status;
   };
 
-  const getTotalPagamentos = () => {
-    return pagamentos.reduce((sum, p) => sum + p.valor, 0);
+  const getTotalRealizados = () => {
+    return realizados.reduce((sum, p) => sum + p.valor, 0);
   };
 
   const getTotalPendentes = () => {
@@ -84,9 +84,9 @@ export default function AdminPayments() {
         
         <div className="payments-stats">
           <div className="stat-card success">
-            <span className="stat-value">{pagamentos.length}</span>
+            <span className="stat-value">{realizados.length}</span>
             <span className="stat-label">Pagamentos Realizados</span>
-            <span className="stat-total">{formatCurrency(getTotalPagamentos())}</span>
+            <span className="stat-total">{formatCurrency(getTotalRealizados())}</span>
           </div>
           <div className="stat-card warning">
             <span className="stat-value">
@@ -109,7 +109,7 @@ export default function AdminPayments() {
           className={`tab ${activeTab === 'realizados' ? 'active' : ''}`}
           onClick={() => setActiveTab('realizados')}
         >
-          Pagamentos Realizados ({pagamentos.length})
+          Pagamentos Realizados ({realizados.length})
         </button>
         <button
           className={`tab ${activeTab === 'pendentes' ? 'active' : ''}`}
@@ -132,7 +132,7 @@ export default function AdminPayments() {
               </tr>
             </thead>
             <tbody>
-              {pagamentos.map(pagamento => {
+              {realizados.map(pagamento => {
                 const user = getUserById(pagamento.user_id);
                 
                 return (
@@ -145,9 +145,9 @@ export default function AdminPayments() {
                     </td>
                     <td className="value-cell">{formatCurrency(pagamento.valor)}</td>
                     <td>
-                      <span className="payment-method">{pagamento.forma_pagamento}</span>
+                      <span className="payment-method">{pagamento.forma_pagamento || '-'}</span>
                     </td>
-                    <td>{formatDateTime(pagamento.data_pagamento)}</td>
+                    <td>{pagamento.data_pagamento ? formatDateTime(pagamento.data_pagamento) : '-'}</td>
                     <td className="observation">{pagamento.observacao || '-'}</td>
                   </tr>
                 );
@@ -155,7 +155,7 @@ export default function AdminPayments() {
             </tbody>
           </table>
 
-          {pagamentos.length === 0 && (
+          {realizados.length === 0 && (
             <div className="no-data">
               <p>Nenhum pagamento realizado ainda.</p>
             </div>

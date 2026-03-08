@@ -3,14 +3,14 @@ import { pagamentoService } from '../../services/api';
 import './PaymentModal.css';
 
 interface PaymentModalProps {
-  pagamentoPendenteId: string;
+  pagamentoId: string;
   valor: number;
   onSuccess: () => void;
   onCancel: () => void;
 }
 
 export default function PaymentModal({ 
-  pagamentoPendenteId, 
+  pagamentoId, 
   valor, 
   onSuccess, 
   onCancel 
@@ -29,7 +29,7 @@ export default function PaymentModal({
       setLoading(true);
       
       // Gerar código PIX simulado
-      const mockPixCode = `00020126580014br.gov.bcb.pix0136${pagamentoPendenteId}520400005303986540${valor.toFixed(2)}5802BR5925CLUBE DO CAFE6009SAO PAULO62070503***6304`;
+      const mockPixCode = `00020126580014br.gov.bcb.pix0136${pagamentoId}520400005303986540${valor.toFixed(2)}5802BR5925CLUBE DO CAFE6009SAO PAULO62070503***6304`;
       
       setPixCopiaECola(mockPixCode);
       
@@ -56,7 +56,7 @@ export default function PaymentModal({
       
       // Registrar o pagamento
       await pagamentoService.registrarPagamentoCompleto(
-        pagamentoPendenteId,
+        pagamentoId,
         'PIX',
         'Pagamento via QR Code'
       );

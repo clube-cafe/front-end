@@ -1,6 +1,6 @@
 import axios, { AxiosError } from 'axios';
 import type { User, RegisterData, AuthResponse, UpdateProfileData, ChangePasswordData } from '../types/user';
-import type { PagamentoPendente, Pagamento } from '../types/payments';
+import type { Pagamento } from '../types/payments';
 import type { Assinatura, PlanoAssinatura } from '../types/assinatura';
 
 const api = axios.create({
@@ -158,48 +158,84 @@ export const userService = {
   },
 };
 
-export const pagamentoPendenteService = {
-
-  getPagamentoPendenteById: async (id: string): Promise<PagamentoPendente> => {
-    const response = await api.get<PagamentoPendente>(`/pagamentos-pendentes/${id}`);
-    return response.data;
-  },
-  
-  getAllPagamentosPendentes: async (): Promise<PagamentoPendente[]> => {
-    const response = await api.get<PagamentoPendente[]>('/pagamentos-pendentes');
+export const pagamentoService = {
+  getAllPagamentos: async (): Promise<Pagamento[]> => {
+    const response = await api.get<Pagamento[]>('/pagamentos');
     return response.data;
   },
 
-  getPagamentosPendentesByUserId: async (userId: string): Promise<PagamentoPendente[]> => {
-    const response = await api.get<PagamentoPendente[]>(`/pagamentos-pendentes/user/${userId}`);
+  getPagamentoById: async (id: string): Promise<Pagamento> => {
+    const response = await api.get<Pagamento>(`/pagamentos/${id}`);
     return response.data;
   },
 
-  getPagamentosVencidos: async (): Promise<PagamentoPendente[]> => {
-    const response = await api.get<PagamentoPendente[]>('/pagamentos-pendentes/vencidos');
+  getPagamentosByUserId: async (userId: string): Promise<Pagamento[]> => {
+    const response = await api.get<Pagamento[]>(`/pagamentos/user/${userId}`);
     return response.data;
   },
 
-  createPagamentoPendente: async (data: {
+  getPagamentosByStatus: async (status: string): Promise<Pagamento[]> => {
+    const response = await api.get<Pagamento[]>(`/pagamentos/status/${status}`);
+    return response.data;
+  },
+
+  getPagamentosPendentes: async (): Promise<Pagamento[]> => {
+    const response = await api.get<Pagamento[]>('/pagamentos/pendentes');
+    return response.data;
+  },
+
+  getPagamentosVencidos: async (): Promise<Pagamento[]> => {
+    const response = await api.get<Pagamento[]>('/pagamentos/vencidos');
+    return response.data;
+  },
+
+  createPagamento: async (data: {
     user_id: string;
     valor: number;
     data_vencimento: string;
     descricao: string;
-    status: string;
-  }): Promise<PagamentoPendente> => {
-    const response = await api.post<PagamentoPendente>('/pagamentos-pendentes', data);
+    status?: string;
+  }): Promise<Pagamento> => {
+    const response = await api.post<Pagamento>('/pagamentos/criar', data);
     return response.data;
   },
 
-  updateStatus: async (id: string, status: string): Promise<PagamentoPendente> => {
-    const response = await api.patch<PagamentoPendente>(`/pagamentos-pendentes/${id}/status`, { status });
+  updateStatus: async (id: string, status: string): Promise<Pagamento> => {
+    const response = await api.patch<Pagamento>(`/pagamentos/${id}/status`, { status });
+    return response.data;
+  },
+
+  registrarPagamentoCompleto: async (
+    pagamento_id: string,
+    forma_pagamento: string,
+    observacao?: string
+  ): Promise<{
+    message: string;
+    pagamento: Pagamento;
+    assinaturaAtivada: boolean;
+  }> => {
+    const response = await api.post('/pagamentos/registrar', {
+      pagamento_id,
+      forma_pagamento,
+      observacao,
+    });
     return response.data;
   },
 
   getTotalByUser: async (userId: string): Promise<{ total: number }> => {
-    const response = await api.get<{ total: number }>(`/pagamentos-pendentes/user/${userId}/total`);
+    const response = await api.get<{ total: number }>(`/pagamentos/total/user/${userId}`);
     return response.data;
-  }
+  },
+
+  getTotalPendentes: async (): Promise<{ total: number }> => {
+    const response = await api.get<{ total: number }>('/pagamentos/total/pendentes');
+    return response.data;
+  },
+
+  getTotalPendentesByUser: async (userId: string): Promise<{ total: number }> => {
+    const response = await api.get<{ total: number }>(`/pagamentos/total/pendentes/${userId}`);
+    return response.data;
+  },
 };
 
 export const assinaturaService = {
@@ -265,51 +301,6 @@ export const assinaturaService = {
     };
   }> => {
     const response = await api.post(`/assinaturas/${id}/cancelar`, { motivo });
-    return response.data;
-  },
-};
-
-export const pagamentoService = {
-  getAllPagamentos: async (): Promise<Pagamento[]> => {
-    const response = await api.get<Pagamento[]>('/pagamentos');
-    return response.data;
-  },
-
-  getPagamentosByUserId: async (userId: string): Promise<Pagamento[]> => {
-    const response = await api.get<Pagamento[]>(`/pagamentos/user/${userId}`);
-    return response.data;
-  },
-
-  createPagamento: async (data: {
-    user_id: string;
-    valor: number;
-    data_pagamento: string;
-    forma_pagamento: string;
-    observacao?: string;
-  }): Promise<Pagamento> => {
-    const response = await api.post<Pagamento>('/pagamentos', data);
-    return response.data;
-  },
-
-  getTotalByUser: async (userId: string): Promise<{ total: number }> => {
-    const response = await api.get<{ total: number }>(`/pagamentos/user/${userId}/total`);
-    return response.data;
-  },
-
-  registrarPagamentoCompleto: async (
-    pagamento_pendente_id: string,
-    forma_pagamento: string,
-    observacao?: string
-  ): Promise<{
-    message: string;
-    pagamento: Pagamento;
-    pendente_atualizado: any;
-  }> => {
-    const response = await api.post('/pagamentos', {
-      pagamento_pendente_id,
-      forma_pagamento,
-      observacao,
-    });
     return response.data;
   },
 };

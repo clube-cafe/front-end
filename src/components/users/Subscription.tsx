@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import api, { assinaturaService, planoService, pagamentoPendenteService } from '../../services/api';
+import api, { assinaturaService, planoService, pagamentoService } from '../../services/api';
 import type { Assinatura, PlanoAssinatura } from '../../types/assinatura';
 import './Subscription.css';
 import { authService } from '../../services/api';
@@ -103,16 +103,16 @@ export default function Subscription({ onAssinaturaChange }: SubscriptionProps) 
   
       console.log('Resposta da API:', response);
   
-      if (response.pagamento_pendente) {
+      if (response.pagamento) {
         setPendingPayment({
-          id: response.pagamento_pendente.id,
-          valor: response.pagamento_pendente.valor
+          id: response.pagamento.id,
+          valor: response.pagamento.valor
         });
         
         setShowPaymentModal(true);
         setShowForm(false);
       } else {
-        setError('Erro: Pendência de pagamento não foi criada');
+        setError('Erro: Pagamento não foi criado');
       }
     } catch (err: any) {
       console.error('Erro ao criar assinatura:', err);
@@ -141,36 +141,36 @@ export default function Subscription({ onAssinaturaChange }: SubscriptionProps) 
     try {
       setError('');
       
-      // Buscar pendências do usuário
-      const pendencias = await pagamentoPendenteService.getPagamentosPendentesByUserId(userId!);
+      // Buscar pagamentos do usuário
+      const pagamentos = await pagamentoService.getPagamentosByUserId(userId!);
       
-      console.log('Pendências encontradas:', pendencias);
-      console.log('Procurando pendência para assinatura:', assinatura.id);
+      console.log('Pagamentos encontrados:', pagamentos);
+      console.log('Procurando pagamento pendente para assinatura:', assinatura.id);
       
-      const pendenciaAssinatura = pendencias.find(p => 
+      const pagamentoPendente = pagamentos.find(p => 
         p.status === 'PENDENTE' && 
         p.assinatura_id === assinatura.id 
       );
       
-      if (!pendenciaAssinatura) {
-        console.error('Nenhuma pendência encontrada.');
+      if (!pagamentoPendente) {
+        console.error('Nenhum pagamento pendente encontrado.');
         console.error('Assinatura ID procurado:', assinatura.id);
-        console.error('Pendências disponíveis:', pendencias);
-        setError('Pendência de pagamento não encontrada. Entre em contato com o suporte.');
+        console.error('Pagamentos disponíveis:', pagamentos);
+        setError('Pagamento pendente não encontrado. Entre em contato com o suporte.');
         return;
       }
       
-      console.log('Pendência encontrada:', pendenciaAssinatura);
+      console.log('Pagamento pendente encontrado:', pagamentoPendente);
       
       setPendingPayment({
-        id: pendenciaAssinatura.id,
-        valor: pendenciaAssinatura.valor
+        id: pagamentoPendente.id,
+        valor: pagamentoPendente.valor
       });
       
       setShowPaymentModal(true);
     } catch (err: any) {
-      console.error('Erro ao buscar pendência:', err);
-      setError('Erro ao buscar pendência de pagamento');
+      console.error('Erro ao buscar pagamento:', err);
+      setError('Erro ao buscar pagamento pendente');
     }
   };
 
@@ -363,7 +363,7 @@ export default function Subscription({ onAssinaturaChange }: SubscriptionProps) 
 
       {showPaymentModal && pendingPayment && (
         <PaymentModal
-          pagamentoPendenteId={pendingPayment.id}
+          pagamentoId={pendingPayment.id}
           valor={pendingPayment.valor}
           onSuccess={handlePaymentSuccess}
           onCancel={handlePaymentCancel}

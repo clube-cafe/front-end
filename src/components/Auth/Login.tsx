@@ -36,7 +36,7 @@ export default function Login({ onSuccess, onSwitchToRegister }: LoginProps) {
       
       if (onSuccess) {
         // ✅ Passar o tipo de usuário
-        onSuccess(response.user.id, response.user.tipo_user);
+        onSuccess(response.user.id, response.user.tipo_user ?? 'ASSINANTE');
       }
     } catch (err: any) {
       if (err.response?.status === 400) {

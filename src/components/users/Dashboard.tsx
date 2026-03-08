@@ -69,16 +69,6 @@ export default function Dashboard({ onLogout }: DashboardProps) {
     return labels[periodicidade] || periodicidade;
   };
 
-  const getStatusLabel = (status: string) => {
-    const labels: { [key: string]: string } = {
-      'ATIVA': 'Ativa',
-      'PENDENTE': 'Aguardando Pagamento',
-      'CANCELADA': 'Cancelada',
-      'SUSPENSA': 'Suspensa'
-    };
-    return labels[status] || status;
-  };
-
   const getAssinaturaAtiva = () => {
     return assinaturas.find(a => a.status === 'ATIVA');
   };

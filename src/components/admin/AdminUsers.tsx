@@ -111,8 +111,8 @@ export default function AdminUsers() {
                   <td>{user.nome}</td>
                   <td>{user.email}</td>
                   <td>
-                    <span className={`type-badge ${user.tipo_user.toLowerCase()}`}>
-                      {user.tipo_user}
+                    <span className={`type-badge ${(user.tipo_user ?? 'ASSINANTE').toLowerCase()}`}>
+                      {user.tipo_user ?? 'ASSINANTE'}
                     </span>
                   </td>
                   <td>
@@ -120,7 +120,7 @@ export default function AdminUsers() {
                       {getStatusLabel(assinatura?.status)}
                     </span>
                   </td>
-                  <td>{new Date(user.createdAt).toLocaleDateString('pt-BR')}</td>
+                  <td>{user.createdAt ? new Date(user.createdAt).toLocaleDateString('pt-BR') : '-'}</td>
                 </tr>
               );
             })}

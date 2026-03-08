@@ -36,7 +36,7 @@ function App() {
     checkAuth();
   }, []);
 
-  const handleLoginSuccess = (userId: string, userType: 'ADMIN' | 'ASSINANTE') => {
+  const handleLoginSuccess = (_userId: string, userType: 'ADMIN' | 'ASSINANTE') => {
     setIsLoggedIn(true);
     setView(userType === 'ADMIN' ? 'admin' : 'dashboard');
   };

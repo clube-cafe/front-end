@@ -1,29 +1,20 @@
-export interface PagamentoPendente {
+export interface Pagamento {
   id: string;
   user_id: string;
-  assinatura_id?: string; 
+  assinatura_id?: string;
   valor: number;
   data_vencimento: string;
   descricao: string;
-  status: string;
+  status: 'PENDENTE' | 'ATRASADO' | 'PAGO' | 'CANCELADO';
+  forma_pagamento?: string;
+  data_pagamento?: string;
+  observacao?: string;
   createdAt?: string;
   updatedAt?: string;
   deletedAt?: string | null;
 }
 
-export interface Pagamento {
-  id: string;
-  user_id: string;
-  pagamento_pendente_id?: string;
-  valor: number;
-  data_pagamento: string;
-  forma_pagamento: string;
-  observacao?: string;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-export interface CreatePagamentoPendenteDTO {
+export interface CreatePagamentoDTO {
   user_id: string;
   valor: number;
   data_vencimento: string;
@@ -32,15 +23,12 @@ export interface CreatePagamentoPendenteDTO {
   assinatura_id?: string;
 }
 
-export interface CreatePagamentoDTO {
-  user_id: string;
-  valor: number;
-  data_pagamento: string;
+export interface RegistrarPagamentoDTO {
+  pagamento_id: string;
   forma_pagamento: string;
   observacao?: string;
-  pagamento_pendente_id?: string;
 }
 
-export interface UpdatePagamentoPendenteStatusDTO {
+export interface UpdatePagamentoStatusDTO {
   status: 'PENDENTE' | 'PAGO' | 'ATRASADO' | 'CANCELADO';
 }
