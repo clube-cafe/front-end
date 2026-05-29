@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react';
-import { pagamentoService, userService } from '../../services/api';
-import { historicoService } from '../../services/api';
-import type { Pagamento } from '../../types/payments';
-import type { User } from '../../types/user';
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import { pagamentoService, userService } from '@/services/api';
+import { historicoService } from '@/services/api';
+import type { Pagamento } from '@/types/payments';
+import type { User } from '@/types/user';
 import './AdminFinanceiro.css';
 
 interface Historico {
@@ -54,11 +56,7 @@ export default function AdminFinanceiro() {
   const [compraSuccess, setCompraSuccess] = useState('');
   const [compraError, setCompraError] = useState('');
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
       const [historicosData, pagamentosData, usersData] = await Promise.all([
@@ -74,7 +72,11 @@ export default function AdminFinanceiro() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   // Quando o admin seleciona um usuário no form de pagamento, buscar pendentes
   const handlePagUserChange = async (userId: string) => {
@@ -112,7 +114,8 @@ export default function AdminFinanceiro() {
       setPagForm({ user_id: '', pagamento_id: '', forma_pagamento: 'CAIXA', observacao: '' });
       setPagUserPendentes([]);
       await loadData();
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as { response?: { data?: { error?: string } } };
       setPagError(error.response?.data?.error || 'Erro ao registrar pagamento');
     } finally {
       setPagLoading(false);
@@ -147,7 +150,8 @@ export default function AdminFinanceiro() {
         data: new Date().toISOString().split('T')[0],
       });
       await loadData();
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as { response?: { data?: { error?: string } } };
       setCompraError(error.response?.data?.error || 'Erro ao registrar compra');
     } finally {
       setCompraLoading(false);

@@ -1,4 +1,6 @@
-import cafeLogo from '../../assets/Clube do Café.png';
+'use client';
+
+import Image from 'next/image';
 import './AdminSidebar.css';
 
 interface AdminSidebarProps {
@@ -11,55 +13,17 @@ export default function AdminSidebar({ activeView, setActiveView, onLogout }: Ad
   return (
     <aside className="admin-sidebar">
       <div className="admin-sidebar-header">
-        <h2><img src={cafeLogo} alt="Clube do Café" className="logo-inline" /> Clube do Café</h2>
+        <h2><Image src="/logo.png" alt="Clube do Café" width={24} height={24} className="logo-inline" /> Clube do Café</h2>
         <span className="admin-tag">Admin</span>
       </div>
-
       <nav className="admin-nav">
-        <button
-          className={`admin-nav-item ${activeView === 'users' ? 'active' : ''}`}
-          onClick={() => setActiveView('users')}
-        >
-          <span className="nav-icon">👥</span>
-          <span>Usuários</span>
-        </button>
-
-        <button
-          className={`admin-nav-item ${activeView === 'subscriptions' ? 'active' : ''}`}
-          onClick={() => setActiveView('subscriptions')}
-        >
-          <span className="nav-icon">📋</span>
-          <span>Assinaturas</span>
-        </button>
-
-        <button
-          className={`admin-nav-item ${activeView === 'payments' ? 'active' : ''}`}
-          onClick={() => setActiveView('payments')}
-        >
-          <span className="nav-icon">💰</span>
-          <span>Pagamentos</span>
-        </button>
-
-        <button
-          className={`admin-nav-item ${activeView === 'plans' ? 'active' : ''}`}
-          onClick={() => setActiveView('plans')}
-        >
-          <span className="nav-icon">📦</span>
-          <span>Planos</span>
-        </button>
-
-        <button
-          className={`admin-nav-item ${activeView === 'financeiro' ? 'active' : ''}`}
-          onClick={() => setActiveView('financeiro')}
-        >
-          <span className="nav-icon">📊</span>
-          <span>Financeiro</span>
-        </button>
+        <button className={`admin-nav-item ${activeView === 'users' ? 'active' : ''}`} onClick={() => setActiveView('users')}><span className="nav-icon">👥</span><span>Usuários</span></button>
+        <button className={`admin-nav-item ${activeView === 'subscriptions' ? 'active' : ''}`} onClick={() => setActiveView('subscriptions')}><span className="nav-icon">📋</span><span>Assinaturas</span></button>
+        <button className={`admin-nav-item ${activeView === 'payments' ? 'active' : ''}`} onClick={() => setActiveView('payments')}><span className="nav-icon">💰</span><span>Pagamentos</span></button>
+        <button className={`admin-nav-item ${activeView === 'plans' ? 'active' : ''}`} onClick={() => setActiveView('plans')}><span className="nav-icon">📦</span><span>Planos</span></button>
+        <button className={`admin-nav-item ${activeView === 'financeiro' ? 'active' : ''}`} onClick={() => setActiveView('financeiro')}><span className="nav-icon">📊</span><span>Financeiro</span></button>
       </nav>
-
-      <button className="admin-logout-btn" onClick={onLogout}>
-        Sair
-      </button>
+      <button className="admin-logout-btn" onClick={onLogout}>Sair</button>
     </aside>
   );
 }

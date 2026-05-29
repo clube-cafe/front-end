@@ -1,8 +1,12 @@
-import { useState, useEffect } from 'react';
-import { planoService } from '../../services/api';
-import type { PlanoAssinatura } from '../../types/assinatura';
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import { planoService } from '@/services/api';
+import type { PlanoAssinatura } from '@/types/assinatura';
 import './AdminPlans.css';
-import ConfirmModal from '../common/ConfirmModal';
+import ConfirmModal from '@/components/common/ConfirmModal';
+
+type Periodicidade = PlanoAssinatura['periodicidade'];
 
 export default function AdminPlans() {
   const [planos, setPlanos] = useState<PlanoAssinatura[]>([]);
@@ -19,11 +23,7 @@ export default function AdminPlans() {
   const [success, setSuccess] = useState('');
   const [confirmModal, setConfirmModal] = useState<{ show: boolean; plano: PlanoAssinatura | null }>({ show: false, plano: null });
 
-  useEffect(() => {
-    loadPlanos();
-  }, []);
-
-  const loadPlanos = async () => {
+  const loadPlanos = useCallback(async () => {
     try {
       setLoading(true);
       const data = await planoService.getAllPlanos();
@@ -34,7 +34,11 @@ export default function AdminPlans() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadPlanos();
+  }, [loadPlanos]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,13 +61,14 @@ export default function AdminPlans() {
         nome: formData.nome,
         descricao: formData.descricao,
         valor: valorNumerico,
-        periodicidade: formData.periodicidade as any,
+        periodicidade: formData.periodicidade as Periodicidade,
         ativo: formData.ativo
       });
       setSuccess('Plano criado com sucesso!');
       resetForm();
       loadPlanos();
-    } catch (err: any) {
+    } catch (e) {
+      const err = e as { response?: { data?: { message?: string } } };
       setError(err.response?.data?.message || 'Erro ao salvar plano');
     }
   };
@@ -82,7 +87,8 @@ export default function AdminPlans() {
       await planoService.updatePlano(plano.id, { ativo: novoStatus });
       setSuccess(`Plano ${novoStatus ? 'ativado' : 'desativado'} com sucesso!`);
       loadPlanos();
-    } catch (err: any) {
+    } catch (e) {
+      const err = e as { response?: { data?: { message?: string } } };
       setError(err.response?.data?.message || `Erro ao ${acao} plano`);
     }
   };
@@ -286,7 +292,7 @@ export default function AdminPlans() {
 
       {planos.length === 0 && (
         <div className="no-data">
-          <p>Nenhum plano cadastrado. Clique em "Novo Plano" para começar.</p>
+          <p>Nenhum plano cadastrado. Clique em &quot;Novo Plano&quot; para começar.</p>
         </div>
       )}
 

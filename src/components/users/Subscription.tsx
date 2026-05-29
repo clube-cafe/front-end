@@ -1,10 +1,12 @@
-import { useState, useEffect } from 'react';
-import api, { assinaturaService, planoService, pagamentoService } from '../../services/api';
-import type { Assinatura, PlanoAssinatura } from '../../types/assinatura';
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import api, { assinaturaService, planoService, pagamentoService } from '@/services/api';
+import type { Assinatura, PlanoAssinatura } from '@/types/assinatura';
 import './Subscription.css';
-import { authService } from '../../services/api';
+import { authService } from '@/services/api';
 import PaymentModal from './PaymentModal';
-import ConfirmModal from '../common/ConfirmModal';
+import ConfirmModal from '@/components/common/ConfirmModal';
 
 interface SubscriptionProps {
   onAssinaturaChange?: () => void;
@@ -31,11 +33,37 @@ export default function Subscription({ onAssinaturaChange, showFormOnLoad = fals
   const currentUser = authService.getCurrentUser();
   const userId = currentUser?.id;
 
-  useEffect(() => {
-    loadData();
+  const loadAssinaturas = useCallback(async () => {
+    try {
+      const response = await api.get<Assinatura[]>(`/assinaturas/user/${userId}`);
+
+      const assinaturasOrdenadas = response.data.sort((a: Assinatura, b: Assinatura) => {
+        const prioridade: { [key: string]: number } = {
+          'ATIVA': 1,
+          'PENDENTE': 2,
+          'SUSPENSA': 3,
+          'CANCELADA': 4
+        };
+
+        return (prioridade[a.status] || 5) - (prioridade[b.status] || 5);
+      });
+
+      setAssinaturas(assinaturasOrdenadas);
+    } catch (error) {
+      console.error('Erro ao carregar assinaturas:', error);
+    }
+  }, [userId]);
+
+  const loadPlanos = useCallback(async () => {
+    try {
+      const data = await planoService.getAllPlanos();
+      setPlanos(data);
+    } catch (error) {
+      console.error('Erro ao carregar planos:', error);
+    }
   }, []);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
       await Promise.all([
@@ -48,37 +76,11 @@ export default function Subscription({ onAssinaturaChange, showFormOnLoad = fals
     } finally {
       setLoading(false);
     }
-  };
+  }, [loadAssinaturas, loadPlanos]);
 
-  const loadAssinaturas = async () => {
-    try {
-      const response = await api.get(`/assinaturas/user/${userId}`);
-      
-      const assinaturasOrdenadas = response.data.sort((a: Assinatura, b: Assinatura) => {
-        const prioridade: { [key: string]: number } = {
-          'ATIVA': 1,
-          'PENDENTE': 2,
-          'SUSPENSA': 3,
-          'CANCELADA': 4
-        };
-        
-        return (prioridade[a.status] || 5) - (prioridade[b.status] || 5);
-      });
-      
-      setAssinaturas(assinaturasOrdenadas);
-    } catch (error) {
-      console.error('Erro ao carregar assinaturas:', error);
-    }
-  };
-
-  const loadPlanos = async () => {
-    try {
-      const data = await planoService.getAllPlanos();
-      setPlanos(data);
-    } catch (error) {
-      console.error('Erro ao carregar planos:', error);
-    }
-  };
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,26 +101,27 @@ export default function Subscription({ onAssinaturaChange, showFormOnLoad = fals
     try {
       setLoading(true);
       
-      const response: any = await assinaturaService.createAssinatura({
+      const response = await assinaturaService.createAssinatura({
         user_id: userId!,
         plano_id: formData.plano_id
-      });
-  
+      }) as unknown as { pagamento?: { id: string; valor: number } };
+
       console.log('Resposta da API:', response);
-  
+
       if (response.pagamento) {
         setPendingPayment({
           id: response.pagamento.id,
           valor: response.pagamento.valor
         });
-        
+
         setShowPaymentModal(true);
         setShowForm(false);
       } else {
         setError('Erro: Pagamento não foi criado');
       }
-    } catch (err: any) {
-      console.error('Erro ao criar assinatura:', err);
+    } catch (e) {
+      const err = e as { response?: { data?: { message?: string } } };
+      console.error('Erro ao criar assinatura:', e);
       setError(err.response?.data?.message || 'Erro ao criar assinatura');
     } finally {
       setLoading(false);
@@ -171,7 +174,7 @@ export default function Subscription({ onAssinaturaChange, showFormOnLoad = fals
       });
       
       setShowPaymentModal(true);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Erro ao buscar pagamento:', err);
       setError('Erro ao buscar pagamento pendente');
     }
@@ -189,7 +192,8 @@ export default function Subscription({ onAssinaturaChange, showFormOnLoad = fals
       setSuccess('Assinatura cancelada com sucesso!');
       loadAssinaturas();
       onAssinaturaChange?.();
-    } catch (err: any) {
+    } catch (e) {
+      const err = e as { response?: { data?: { message?: string } } };
       setError(err.response?.data?.message || 'Erro ao cancelar assinatura');
     }
   };
@@ -304,7 +308,7 @@ export default function Subscription({ onAssinaturaChange, showFormOnLoad = fals
         {assinaturas.length === 0 ? (
           <div className="no-data">
             <h3>📋 Nenhuma assinatura encontrada</h3>
-            <p>Clique em "Nova Assinatura" para começar</p>
+            <p>Clique em &quot;Nova Assinatura&quot; para começar</p>
           </div>
         ) : (
           assinaturas.map((assinatura) => {

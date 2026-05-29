@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react';
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
 import Sidebar from './Sidebar';
 import Subscription from './Subscription';
-import { assinaturaService, authService, planoService } from '../../services/api';
-import type { Assinatura, PlanoAssinatura } from '../../types/assinatura';
+import { assinaturaService, authService, planoService } from '@/services/api';
+import type { Assinatura, PlanoAssinatura } from '@/types/assinatura';
 import './Dashboard.css';
 
 interface DashboardProps {
@@ -20,13 +22,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
   const userName = currentUser?.nome || 'Usuário';
   const userId = currentUser?.id;
 
-  useEffect(() => {
-    if (activeView === 'home' && userId) {
-      loadData();
-    }
-  }, [activeView, userId]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     if (!userId) {
       console.log('Aguardando userId...');
       setLoading(false);
@@ -39,7 +35,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
         assinaturaService.getAssinaturasByUserId(userId),
         planoService.getAllPlanos()
       ]);
-      
+
       setAssinaturas(assinaturasData);
       setPlanos(planosData);
     } catch (error) {
@@ -47,7 +43,13 @@ export default function Dashboard({ onLogout }: DashboardProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
+
+  useEffect(() => {
+    if (activeView === 'home' && userId) {
+      loadData();
+    }
+  }, [activeView, userId, loadData]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {

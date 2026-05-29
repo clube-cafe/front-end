@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react';
-import { userService, assinaturaService } from '../../services/api';
-import type { User } from '../../types/user';
-import type { Assinatura } from '../../types/assinatura';
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import { userService, assinaturaService } from '@/services/api';
+import type { User } from '@/types/user';
+import type { Assinatura } from '@/types/assinatura';
 import './AdminUsers.css';
 
 export default function AdminUsers() {
@@ -15,11 +17,7 @@ export default function AdminUsers() {
   const [formSuccess, setFormSuccess] = useState('');
   const [newUser, setNewUser] = useState({ nome: '', email: '', password: '', confirmPassword: '' });
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
       const [usersData, assinaturasData] = await Promise.all([
@@ -33,7 +31,11 @@ export default function AdminUsers() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,7 +71,8 @@ export default function AdminUsers() {
         setShowForm(false);
         setFormSuccess('');
       }, 2000);
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } } };
       const msg = error.response?.data?.message || 'Erro ao cadastrar cliente.';
       setFormError(msg);
     } finally {

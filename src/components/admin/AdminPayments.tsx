@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react';
-import { pagamentoService, userService } from '../../services/api';
-import type { Pagamento } from '../../types/payments';
-import type { User } from '../../types/user';
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import { pagamentoService, userService } from '@/services/api';
+import type { Pagamento } from '@/types/payments';
+import type { User } from '@/types/user';
 import './AdminPayments.css';
 
 export default function AdminPayments() {
@@ -10,18 +12,14 @@ export default function AdminPayments() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'realizados' | 'pendentes'>('realizados');
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
       const [pagamentosData, usersData] = await Promise.all([
         pagamentoService.getAllPagamentos(),
         userService.getAllUsers()
       ]);
-      
+
       setPagamentos(pagamentosData);
       setUsers(usersData);
     } catch (error) {
@@ -29,7 +27,11 @@ export default function AdminPayments() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const realizados = pagamentos.filter(p => p.status === 'PAGO');
   const pendentes = pagamentos.filter(p => p.status === 'PENDENTE' || p.status === 'ATRASADO');
