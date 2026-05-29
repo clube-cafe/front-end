@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react';
-import { userService, assinaturaService } from '../../services/api';
-import type { User } from '../../types/user';
-import type { Assinatura } from '../../types/assinatura';
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import { userService, assinaturaService } from '@/services/api';
+import type { User } from '@/types/user';
+import type { Assinatura } from '@/types/assinatura';
 import './AdminUsers.css';
 
 export default function AdminUsers() {
@@ -9,12 +11,13 @@ export default function AdminUsers() {
   const [assinaturas, setAssinaturas] = useState<Assinatura[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showForm, setShowForm] = useState(false);
+  const [formLoading, setFormLoading] = useState(false);
+  const [formError, setFormError] = useState('');
+  const [formSuccess, setFormSuccess] = useState('');
+  const [newUser, setNewUser] = useState({ nome: '', email: '', password: '', confirmPassword: '' });
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
       const [usersData, assinaturasData] = await Promise.all([
@@ -27,6 +30,53 @@ export default function AdminUsers() {
       console.error('Erro ao carregar dados:', error);
     } finally {
       setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const handleCreateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormError('');
+    setFormSuccess('');
+
+    if (!newUser.nome.trim() || !newUser.email.trim() || !newUser.password) {
+      setFormError('Preencha todos os campos obrigatórios.');
+      return;
+    }
+
+    if (newUser.password.length < 6) {
+      setFormError('A senha deve ter no mínimo 6 caracteres.');
+      return;
+    }
+
+    if (newUser.password !== newUser.confirmPassword) {
+      setFormError('As senhas não coincidem.');
+      return;
+    }
+
+    try {
+      setFormLoading(true);
+      await userService.createUser({
+        nome: newUser.nome.trim(),
+        email: newUser.email.trim(),
+        password: newUser.password,
+      });
+      setFormSuccess(`Cliente "${newUser.nome.trim()}" cadastrado com sucesso!`);
+      setNewUser({ nome: '', email: '', password: '', confirmPassword: '' });
+      await loadData();
+      setTimeout(() => {
+        setShowForm(false);
+        setFormSuccess('');
+      }, 2000);
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } } };
+      const msg = error.response?.data?.message || 'Erro ao cadastrar cliente.';
+      setFormError(msg);
+    } finally {
+      setFormLoading(false);
     }
   };
 
@@ -62,7 +112,12 @@ export default function AdminUsers() {
   return (
     <div className="admin-users-container">
       <div className="admin-section-header">
-        <h2>👥 Gerenciar Usuários</h2>
+        <div className="section-header-row">
+          <h2>👥 Gerenciar Usuários</h2>
+          <button className="add-user-btn" onClick={() => { setShowForm(true); setFormError(''); setFormSuccess(''); }}>
+            <span className="btn-icon">+</span> Novo Cliente
+          </button>
+        </div>
         <div className="users-stats">
           <div className="stat-card">
             <span className="stat-value">{users.length}</span>
@@ -111,8 +166,8 @@ export default function AdminUsers() {
                   <td>{user.nome}</td>
                   <td>{user.email}</td>
                   <td>
-                    <span className={`type-badge ${user.tipo_user.toLowerCase()}`}>
-                      {user.tipo_user}
+                    <span className={`type-badge ${(user.tipo_user ?? 'ASSINANTE').toLowerCase()}`}>
+                      {user.tipo_user ?? 'ASSINANTE'}
                     </span>
                   </td>
                   <td>
@@ -120,13 +175,83 @@ export default function AdminUsers() {
                       {getStatusLabel(assinatura?.status)}
                     </span>
                   </td>
-                  <td>{new Date(user.createdAt).toLocaleDateString('pt-BR')}</td>
+                  <td>{user.createdAt ? new Date(user.createdAt).toLocaleDateString('pt-BR') : '-'}</td>
                 </tr>
               );
             })}
           </tbody>
         </table>
       </div>
+
+      {/* Modal: Novo Cliente */}
+      {showForm && (
+        <div className="user-form-modal">
+          <div className="user-form-card">
+            <div className="form-header">
+              <h3>Cadastrar Novo Cliente</h3>
+              <button className="close-btn" onClick={() => setShowForm(false)}>✕</button>
+            </div>
+            <form onSubmit={handleCreateUser}>
+              {formError && <div className="form-alert error">{formError}</div>}
+              {formSuccess && <div className="form-alert success">{formSuccess}</div>}
+
+              <div className="form-group">
+                <label>Nome completo *</label>
+                <input
+                  type="text"
+                  placeholder="Ex: João Silva"
+                  value={newUser.nome}
+                  onChange={(e) => setNewUser({ ...newUser, nome: e.target.value })}
+                  disabled={formLoading}
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Email *</label>
+                <input
+                  type="email"
+                  placeholder="Ex: joao@email.com"
+                  value={newUser.email}
+                  onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                  disabled={formLoading}
+                />
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Senha *</label>
+                  <input
+                    type="password"
+                    placeholder="Mínimo 6 caracteres"
+                    value={newUser.password}
+                    onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+                    disabled={formLoading}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Confirmar Senha *</label>
+                  <input
+                    type="password"
+                    placeholder="Repita a senha"
+                    value={newUser.confirmPassword}
+                    onChange={(e) => setNewUser({ ...newUser, confirmPassword: e.target.value })}
+                    disabled={formLoading}
+                  />
+                </div>
+              </div>
+
+              <div className="form-actions">
+                <button type="button" className="cancel-btn" onClick={() => setShowForm(false)} disabled={formLoading}>
+                  Cancelar
+                </button>
+                <button type="submit" className="submit-btn" disabled={formLoading}>
+                  {formLoading ? 'Cadastrando...' : 'Cadastrar Cliente'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

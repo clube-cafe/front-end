@@ -3,7 +3,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #ffa621 0%, #ff9100 100%);
+    background: var(--gradient-accent);
     padding: 40px 20px;
   }
   
@@ -24,7 +24,7 @@
   .auth-header h1 {
     font-size: 3rem;
     margin: 0 0 16px 0;
-    color: #6b4423;
+    color: var(--color-primary);
     font-weight: 700;
   }
   
@@ -74,8 +74,8 @@
   
   .form-group input:focus {
     outline: none;
-    border-color: #000000;
-    box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.08);
+    border-color: var(--color-secondary);
+    box-shadow: 0 0 0 4px rgba(191, 106, 48, 0.15);
   }
   
   .form-group input:disabled {
@@ -100,7 +100,7 @@
   
   .submit-button {
     padding: 18px 24px;
-    background: #000000;
+    background: var(--color-primary);
     color: white;
     border: none;
     border-radius: 10px;
@@ -114,8 +114,8 @@
   
   .submit-button:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-    background: #1a1a1a;
+    box-shadow: 0 10px 30px rgba(62, 39, 35, 0.4);
+    background: var(--color-primary-light);
   }
   
   .submit-button:active:not(:disabled) {
@@ -141,7 +141,7 @@
   .link-button {
     background: none;
     border: none;
-    color: #000000;
+    color: var(--color-secondary);
     font-weight: 600;
     cursor: pointer;
     padding: 0;
@@ -151,7 +151,7 @@
   }
   
   .link-button:hover {
-    color: #333;
+    color: var(--color-secondary-dark);
   }
   
   /* Responsividade */

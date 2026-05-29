@@ -1,6 +1,6 @@
 .admin-sidebar {
     width: 260px;
-    background: #2c3e50;
+    background: var(--color-primary);
     color: white;
     display: flex;
     flex-direction: column;
@@ -19,8 +19,8 @@
   }
   
   .admin-tag {
-    background: #e74c3c;
-    color: white;
+    background: var(--color-accent);
+    color: var(--color-primary-dark);
     padding: 4px 12px;
     border-radius: 12px;
     font-size: 11px;
@@ -57,7 +57,7 @@
   .admin-nav-item.active {
     background: rgba(255, 255, 255, 0.1);
     color: white;
-    border-left-color: #3498db;
+    border-left-color: var(--color-accent);
   }
   
   .nav-icon {
@@ -67,7 +67,7 @@
   .admin-logout-btn {
     margin: 20px;
     padding: 12px;
-    background: #e74c3c;
+    background: var(--color-maroon);
     color: white;
     border: none;
     border-radius: 6px;
@@ -82,6 +82,6 @@
   }
   
   .admin-logout-btn:hover {
-    background: #c0392b;
+    background: var(--color-maroon-dark);
     transform: translateY(-2px);
   }

@@ -13,15 +13,15 @@
   }
   
   .plans-stats .stat-card {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--gradient-primary);
   }
   
   .plans-stats .stat-card.active {
-    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    background: var(--gradient-success);
   }
   
   .plans-stats .stat-card.inactive {
-    background: linear-gradient(135deg, #bdc3c7 0%, #2c3e50 100%);
+    background: linear-gradient(135deg, var(--text-muted) 0%, var(--color-primary) 100%);
   }
   
   .action-bar {
@@ -32,7 +32,7 @@
   
   .create-plan-btn {
     padding: 12px 24px;
-    background: #2c5530;
+    background: var(--color-secondary);
     color: white;
     border: none;
     border-radius: 6px;
@@ -46,9 +46,16 @@
   }
   
   .create-plan-btn:hover {
-    background: #1e3d21;
+    background: var(--color-secondary-dark);
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(44, 85, 48, 0.3);
+    box-shadow: 0 4px 12px rgba(191, 106, 48, 0.3);
+  }
+
+  .create-plan-btn .btn-icon {
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1;
+    color: white;
   }
   
   /* Modal do formulário */
@@ -135,7 +142,7 @@
   .form-group textarea:focus,
   .form-group select:focus {
     outline: none;
-    border-color: #2c5530;
+    border-color: var(--color-secondary);
   }
   
   .form-group textarea {
@@ -191,12 +198,12 @@
   }
   
   .submit-btn {
-    background: #2c5530;
+    background: var(--color-secondary);
     color: white;
   }
   
   .submit-btn:hover {
-    background: #1e3d21;
+    background: var(--color-secondary-dark);
   }
   
   /* Grid de planos */
@@ -216,8 +223,8 @@
   }
   
   .plan-card:hover {
-    border-color: #2c5530;
-    box-shadow: 0 4px 12px rgba(44, 85, 48, 0.1);
+    border-color: var(--color-secondary);
+    box-shadow: 0 4px 12px rgba(191, 106, 48, 0.1);
     transform: translateY(-4px);
   }
   
@@ -240,7 +247,7 @@
   }
   
   .inactive-badge {
-    background: #dc3545;
+    background: var(--color-maroon);
     color: white;
     padding: 4px 10px;
     border-radius: 12px;
@@ -266,7 +273,7 @@
   .price-value {
     font-size: 32px;
     font-weight: bold;
-    color: #2c5530;
+    color: var(--color-secondary);
   }
   
   .price-period {
@@ -303,11 +310,11 @@
   }
   
   .info-value.active {
-    color: #28a745;
+    color: var(--color-success);
   }
   
   .info-value.inactive {
-    color: #dc3545;
+    color: var(--color-maroon);
   }
   
   .plan-actions {
@@ -316,8 +323,8 @@
     margin-top: 15px;
   }
   
-  .edit-btn,
-  .delete-btn {
+.deactivate-btn,
+  .activate-btn {
     flex: 1;
     padding: 10px;
     border: none;
@@ -327,23 +334,23 @@
     cursor: pointer;
     transition: all 0.3s;
   }
-  
-  .edit-btn {
-    background: #3498db;
+
+  .deactivate-btn {
+    background: var(--color-maroon);
     color: white;
   }
-  
-  .edit-btn:hover {
-    background: #2980b9;
+
+  .deactivate-btn:hover {
+    background: var(--color-maroon-dark);
   }
-  
-  .delete-btn {
-    background: #dc3545;
+
+  .activate-btn {
+    background: var(--color-success);
     color: white;
   }
-  
-  .delete-btn:hover {
-    background: #c82333;
+
+  .activate-btn:hover {
+    background: var(--color-success-light);
   }
   
   .error-message,

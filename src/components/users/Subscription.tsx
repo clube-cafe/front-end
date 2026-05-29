@@ -1,25 +1,30 @@
-import { useState, useEffect } from 'react';
-import api, { assinaturaService, planoService, pagamentoPendenteService } from '../../services/api';
-import type { Assinatura, PlanoAssinatura } from '../../types/assinatura';
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import api, { assinaturaService, planoService, pagamentoService } from '@/services/api';
+import type { Assinatura, PlanoAssinatura } from '@/types/assinatura';
 import './Subscription.css';
-import { authService } from '../../services/api';
+import { authService } from '@/services/api';
 import PaymentModal from './PaymentModal';
+import ConfirmModal from '@/components/common/ConfirmModal';
 
 interface SubscriptionProps {
   onAssinaturaChange?: () => void;
+  showFormOnLoad?: boolean;
 }
 
-export default function Subscription({ onAssinaturaChange }: SubscriptionProps) {
+export default function Subscription({ onAssinaturaChange, showFormOnLoad = false }: SubscriptionProps) {
   const [assinaturas, setAssinaturas] = useState<Assinatura[]>([]);
   const [planos, setPlanos] = useState<PlanoAssinatura[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
+  const [showForm, setShowForm] = useState(showFormOnLoad);
   const [formData, setFormData] = useState({
     plano_id: ''
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [confirmModal, setConfirmModal] = useState<{ show: boolean; id: string }>({ show: false, id: '' });
   const [pendingPayment, setPendingPayment] = useState<{
     id: string;
     valor: number;
@@ -28,11 +33,37 @@ export default function Subscription({ onAssinaturaChange }: SubscriptionProps) 
   const currentUser = authService.getCurrentUser();
   const userId = currentUser?.id;
 
-  useEffect(() => {
-    loadData();
+  const loadAssinaturas = useCallback(async () => {
+    try {
+      const response = await api.get<Assinatura[]>(`/assinaturas/user/${userId}`);
+
+      const assinaturasOrdenadas = response.data.sort((a: Assinatura, b: Assinatura) => {
+        const prioridade: { [key: string]: number } = {
+          'ATIVA': 1,
+          'PENDENTE': 2,
+          'SUSPENSA': 3,
+          'CANCELADA': 4
+        };
+
+        return (prioridade[a.status] || 5) - (prioridade[b.status] || 5);
+      });
+
+      setAssinaturas(assinaturasOrdenadas);
+    } catch (error) {
+      console.error('Erro ao carregar assinaturas:', error);
+    }
+  }, [userId]);
+
+  const loadPlanos = useCallback(async () => {
+    try {
+      const data = await planoService.getAllPlanos();
+      setPlanos(data);
+    } catch (error) {
+      console.error('Erro ao carregar planos:', error);
+    }
   }, []);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
       await Promise.all([
@@ -45,37 +76,11 @@ export default function Subscription({ onAssinaturaChange }: SubscriptionProps) 
     } finally {
       setLoading(false);
     }
-  };
+  }, [loadAssinaturas, loadPlanos]);
 
-  const loadAssinaturas = async () => {
-    try {
-      const response = await api.get(`/assinaturas/user/${userId}`);
-      
-      const assinaturasOrdenadas = response.data.sort((a: Assinatura, b: Assinatura) => {
-        const prioridade: { [key: string]: number } = {
-          'ATIVA': 1,
-          'PENDENTE': 2,
-          'SUSPENSA': 3,
-          'CANCELADA': 4
-        };
-        
-        return (prioridade[a.status] || 5) - (prioridade[b.status] || 5);
-      });
-      
-      setAssinaturas(assinaturasOrdenadas);
-    } catch (error) {
-      console.error('Erro ao carregar assinaturas:', error);
-    }
-  };
-
-  const loadPlanos = async () => {
-    try {
-      const data = await planoService.getAllPlanos();
-      setPlanos(data);
-    } catch (error) {
-      console.error('Erro ao carregar planos:', error);
-    }
-  };
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,26 +101,27 @@ export default function Subscription({ onAssinaturaChange }: SubscriptionProps) 
     try {
       setLoading(true);
       
-      const response: any = await assinaturaService.createAssinatura({
+      const response = await assinaturaService.createAssinatura({
         user_id: userId!,
         plano_id: formData.plano_id
-      });
-  
+      }) as unknown as { pagamento?: { id: string; valor: number } };
+
       console.log('Resposta da API:', response);
-  
-      if (response.pagamento_pendente) {
+
+      if (response.pagamento) {
         setPendingPayment({
-          id: response.pagamento_pendente.id,
-          valor: response.pagamento_pendente.valor
+          id: response.pagamento.id,
+          valor: response.pagamento.valor
         });
-        
+
         setShowPaymentModal(true);
         setShowForm(false);
       } else {
-        setError('Erro: Pendência de pagamento não foi criada');
+        setError('Erro: Pagamento não foi criado');
       }
-    } catch (err: any) {
-      console.error('Erro ao criar assinatura:', err);
+    } catch (e) {
+      const err = e as { response?: { data?: { message?: string } } };
+      console.error('Erro ao criar assinatura:', e);
       setError(err.response?.data?.message || 'Erro ao criar assinatura');
     } finally {
       setLoading(false);
@@ -141,48 +147,53 @@ export default function Subscription({ onAssinaturaChange }: SubscriptionProps) 
     try {
       setError('');
       
-      // Buscar pendências do usuário
-      const pendencias = await pagamentoPendenteService.getPagamentosPendentesByUserId(userId!);
+      // Buscar pagamentos do usuário
+      const pagamentos = await pagamentoService.getPagamentosByUserId(userId!);
       
-      console.log('Pendências encontradas:', pendencias);
-      console.log('Procurando pendência para assinatura:', assinatura.id);
+      console.log('Pagamentos encontrados:', pagamentos);
+      console.log('Procurando pagamento pendente para assinatura:', assinatura.id);
       
-      const pendenciaAssinatura = pendencias.find(p => 
+      const pagamentoPendente = pagamentos.find(p => 
         p.status === 'PENDENTE' && 
         p.assinatura_id === assinatura.id 
       );
       
-      if (!pendenciaAssinatura) {
-        console.error('Nenhuma pendência encontrada.');
+      if (!pagamentoPendente) {
+        console.error('Nenhum pagamento pendente encontrado.');
         console.error('Assinatura ID procurado:', assinatura.id);
-        console.error('Pendências disponíveis:', pendencias);
-        setError('Pendência de pagamento não encontrada. Entre em contato com o suporte.');
+        console.error('Pagamentos disponíveis:', pagamentos);
+        setError('Pagamento pendente não encontrado. Entre em contato com o suporte.');
         return;
       }
       
-      console.log('Pendência encontrada:', pendenciaAssinatura);
+      console.log('Pagamento pendente encontrado:', pagamentoPendente);
       
       setPendingPayment({
-        id: pendenciaAssinatura.id,
-        valor: pendenciaAssinatura.valor
+        id: pagamentoPendente.id,
+        valor: pagamentoPendente.valor
       });
       
       setShowPaymentModal(true);
-    } catch (err: any) {
-      console.error('Erro ao buscar pendência:', err);
-      setError('Erro ao buscar pendência de pagamento');
+    } catch (err) {
+      console.error('Erro ao buscar pagamento:', err);
+      setError('Erro ao buscar pagamento pendente');
     }
   };
 
-  const handleCancelar = async (id: string) => {
-    if (!confirm('Tem certeza que deseja cancelar esta assinatura?')) return;
+  const handleCancelar = (id: string) => {
+    setConfirmModal({ show: true, id });
+  };
 
+  const confirmCancelar = async () => {
+    const id = confirmModal.id;
+    setConfirmModal({ show: false, id: '' });
     try {
       await assinaturaService.cancelarAssinatura(id);
       setSuccess('Assinatura cancelada com sucesso!');
       loadAssinaturas();
       onAssinaturaChange?.();
-    } catch (err: any) {
+    } catch (e) {
+      const err = e as { response?: { data?: { message?: string } } };
       setError(err.response?.data?.message || 'Erro ao cancelar assinatura');
     }
   };
@@ -297,7 +308,7 @@ export default function Subscription({ onAssinaturaChange }: SubscriptionProps) 
         {assinaturas.length === 0 ? (
           <div className="no-data">
             <h3>📋 Nenhuma assinatura encontrada</h3>
-            <p>Clique em "Nova Assinatura" para começar</p>
+            <p>Clique em &quot;Nova Assinatura&quot; para começar</p>
           </div>
         ) : (
           assinaturas.map((assinatura) => {
@@ -351,7 +362,7 @@ export default function Subscription({ onAssinaturaChange }: SubscriptionProps) 
                       className="delete-btn"
                       onClick={() => handleCancelar(assinatura.id)}
                     >
-                      🗑️ Cancelar Assinatura
+                      Cancelar Assinatura
                     </button>
                   )}
                 </div>
@@ -363,10 +374,23 @@ export default function Subscription({ onAssinaturaChange }: SubscriptionProps) 
 
       {showPaymentModal && pendingPayment && (
         <PaymentModal
-          pagamentoPendenteId={pendingPayment.id}
+          pagamentoId={pendingPayment.id}
           valor={pendingPayment.valor}
           onSuccess={handlePaymentSuccess}
           onCancel={handlePaymentCancel}
+        />
+      )}
+
+      {confirmModal.show && (
+        <ConfirmModal
+          icon="⚠️"
+          title="Cancelar Assinatura"
+          message="Tem certeza que deseja cancelar esta assinatura? Esta ação não pode ser desfeita."
+          confirmText="Sim, cancelar"
+          cancelText="Não, manter"
+          variant="danger"
+          onConfirm={confirmCancelar}
+          onCancel={() => setConfirmModal({ show: false, id: '' })}
         />
       )}
     </div>

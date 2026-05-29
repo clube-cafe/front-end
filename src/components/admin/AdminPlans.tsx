@@ -1,13 +1,17 @@
-import { useState, useEffect } from 'react';
-import { planoService } from '../../services/api';
-import type { PlanoAssinatura } from '../../types/assinatura';
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import { planoService } from '@/services/api';
+import type { PlanoAssinatura } from '@/types/assinatura';
 import './AdminPlans.css';
+import ConfirmModal from '@/components/common/ConfirmModal';
+
+type Periodicidade = PlanoAssinatura['periodicidade'];
 
 export default function AdminPlans() {
   const [planos, setPlanos] = useState<PlanoAssinatura[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [editingPlan, setEditingPlan] = useState<PlanoAssinatura | null>(null);
   const [formData, setFormData] = useState({
     nome: '',
     descricao: '',
@@ -17,12 +21,9 @@ export default function AdminPlans() {
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [confirmModal, setConfirmModal] = useState<{ show: boolean; plano: PlanoAssinatura | null }>({ show: false, plano: null });
 
-  useEffect(() => {
-    loadPlanos();
-  }, []);
-
-  const loadPlanos = async () => {
+  const loadPlanos = useCallback(async () => {
     try {
       setLoading(true);
       const data = await planoService.getAllPlanos();
@@ -33,7 +34,11 @@ export default function AdminPlans() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadPlanos();
+  }, [loadPlanos]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,56 +57,39 @@ export default function AdminPlans() {
     }
 
     try {
-      if (editingPlan) {
-        // Atualizar plano existente
-        await planoService.updatePlano(editingPlan.id, {
-          nome: formData.nome,
-          descricao: formData.descricao,
-          valor: valorNumerico,
-          periodicidade: formData.periodicidade as any,
-          ativo: formData.ativo
-        });
-        setSuccess('Plano atualizado com sucesso!');
-      } else {
-        // Criar novo plano
-        await planoService.createPlano({
-          nome: formData.nome,
-          descricao: formData.descricao,
-          valor: valorNumerico,
-          periodicidade: formData.periodicidade as any,
-          ativo: formData.ativo
-        });
-        setSuccess('Plano criado com sucesso!');
-      }
-
+      await planoService.createPlano({
+        nome: formData.nome,
+        descricao: formData.descricao,
+        valor: valorNumerico,
+        periodicidade: formData.periodicidade as Periodicidade,
+        ativo: formData.ativo
+      });
+      setSuccess('Plano criado com sucesso!');
       resetForm();
       loadPlanos();
-    } catch (err: any) {
+    } catch (e) {
+      const err = e as { response?: { data?: { message?: string } } };
       setError(err.response?.data?.message || 'Erro ao salvar plano');
     }
   };
 
-  const handleEdit = (plano: PlanoAssinatura) => {
-    setEditingPlan(plano);
-    setFormData({
-      nome: plano.nome,
-      descricao: plano.descricao || '',
-      valor: plano.valor.toString(),
-      periodicidade: plano.periodicidade,
-      ativo: plano.ativo
-    });
-    setShowForm(true);
+  const handleToggleAtivo = (plano: PlanoAssinatura) => {
+    setConfirmModal({ show: true, plano });
   };
 
-  const handleDelete = async (id: string, nome: string) => {
-    if (!confirm(`Tem certeza que deseja deletar o plano "${nome}"?`)) return;
-
+  const confirmToggleAtivo = async () => {
+    const plano = confirmModal.plano;
+    setConfirmModal({ show: false, plano: null });
+    if (!plano) return;
+    const novoStatus = !plano.ativo;
+    const acao = novoStatus ? 'ativar' : 'desativar';
     try {
-      await planoService.deletePlano(id);
-      setSuccess('Plano deletado com sucesso!');
+      await planoService.updatePlano(plano.id, { ativo: novoStatus });
+      setSuccess(`Plano ${novoStatus ? 'ativado' : 'desativado'} com sucesso!`);
       loadPlanos();
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Erro ao deletar plano');
+    } catch (e) {
+      const err = e as { response?: { data?: { message?: string } } };
+      setError(err.response?.data?.message || `Erro ao ${acao} plano`);
     }
   };
 
@@ -113,7 +101,6 @@ export default function AdminPlans() {
       periodicidade: 'MENSAL',
       ativo: true
     });
-    setEditingPlan(null);
     setShowForm(false);
   };
 
@@ -170,7 +157,7 @@ export default function AdminPlans() {
             setShowForm(true);
           }}
         >
-          ➕ Novo Plano
+          <span className="btn-icon">+</span> Novo Plano
         </button>
       </div>
 
@@ -178,7 +165,7 @@ export default function AdminPlans() {
         <div className="plan-form-modal">
           <div className="plan-form-card">
             <div className="form-header">
-              <h3>{editingPlan ? 'Editar Plano' : 'Criar Novo Plano'}</h3>
+              <h3>Criar Novo Plano</h3>
               <button className="close-btn" onClick={resetForm}>✕</button>
             </div>
 
@@ -253,7 +240,7 @@ export default function AdminPlans() {
                   Cancelar
                 </button>
                 <button type="submit" className="submit-btn">
-                  {editingPlan ? 'Atualizar Plano' : 'Criar Plano'}
+                  Criar Plano
                 </button>
               </div>
             </form>
@@ -293,16 +280,10 @@ export default function AdminPlans() {
 
             <div className="plan-actions">
               <button 
-                className="edit-btn"
-                onClick={() => handleEdit(plano)}
+                className={plano.ativo ? 'deactivate-btn' : 'activate-btn'}
+                onClick={() => handleToggleAtivo(plano)}
               >
-                Editar
-              </button>
-              <button 
-                className="delete-btn"
-                onClick={() => handleDelete(plano.id, plano.nome)}
-              >
-                Deletar
+                {plano.ativo ? 'Desativar' : 'Ativar'}
               </button>
             </div>
           </div>
@@ -311,8 +292,21 @@ export default function AdminPlans() {
 
       {planos.length === 0 && (
         <div className="no-data">
-          <p>Nenhum plano cadastrado. Clique em "Novo Plano" para começar.</p>
+          <p>Nenhum plano cadastrado. Clique em &quot;Novo Plano&quot; para começar.</p>
         </div>
+      )}
+
+      {confirmModal.show && confirmModal.plano && (
+        <ConfirmModal
+          icon={confirmModal.plano.ativo ? '⏸️' : '▶️'}
+          title={confirmModal.plano.ativo ? 'Desativar Plano' : 'Ativar Plano'}
+          message={`Tem certeza que deseja ${confirmModal.plano.ativo ? 'desativar' : 'ativar'} o plano "${confirmModal.plano.nome}"?`}
+          confirmText={confirmModal.plano.ativo ? 'Desativar' : 'Ativar'}
+          cancelText="Cancelar"
+          variant={confirmModal.plano.ativo ? 'danger' : 'success'}
+          onConfirm={confirmToggleAtivo}
+          onCancel={() => setConfirmModal({ show: false, plano: null })}
+        />
       )}
     </div>
   );

@@ -14,7 +14,7 @@ export interface PlanoAssinatura {
     user_id: string;
     plano_id: string;
     data_inicio: string;
-    status: 'ATIVA' | 'CANCELADA' | 'SUSPENSA';
+    status: 'ATIVA' | 'CANCELADA' | 'SUSPENSA' | 'PENDENTE';
     createdAt?: string;
     updatedAt?: string;
     deletedAt?: string | null;

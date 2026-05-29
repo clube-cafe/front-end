@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react';
-import { assinaturaService, planoService, userService } from '../../services/api';
-import type { Assinatura, PlanoAssinatura } from '../../types/assinatura';
-import type { User } from '../../types/user';
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import { assinaturaService, planoService, userService } from '@/services/api';
+import type { Assinatura, PlanoAssinatura } from '@/types/assinatura';
+import type { User } from '@/types/user';
 import './AdminSubscriptions.css';
 
 export default function AdminSubscriptions() {
@@ -11,11 +13,7 @@ export default function AdminSubscriptions() {
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState<string>('ALL');
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
       const [assinaturasData, planosData, usersData] = await Promise.all([
@@ -23,8 +21,7 @@ export default function AdminSubscriptions() {
         planoService.getAllPlanos(),
         userService.getAllUsers()
       ]);
-      
-      // Ordenar assinaturas por prioridade
+
       const assinaturasOrdenadas = assinaturasData.sort((a, b) => {
         const prioridade: { [key: string]: number } = {
           'ATIVA': 1,
@@ -34,7 +31,7 @@ export default function AdminSubscriptions() {
         };
         return (prioridade[a.status] || 5) - (prioridade[b.status] || 5);
       });
-      
+
       setAssinaturas(assinaturasOrdenadas);
       setPlanos(planosData);
       setUsers(usersData);
@@ -43,7 +40,11 @@ export default function AdminSubscriptions() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const getPlanoById = (planoId: string) => {
     return planos.find(p => p.id === planoId);
