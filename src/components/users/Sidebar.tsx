@@ -1,19 +1,94 @@
 'use client';
 
+import { useEffect } from 'react';
 import Image from 'next/image';
-import './Sidebar.css';
+import { cn } from '@/lib/cn';
 
-interface SidebarProps { activeView: 'home' | 'subscription'; setActiveView: (view: 'home' | 'subscription') => void; onLogout: () => void; }
+type View = 'home' | 'subscription';
 
-export default function Sidebar({ activeView, setActiveView, onLogout }: SidebarProps) {
+interface SidebarProps {
+  activeView: View;
+  setActiveView: (view: View) => void;
+  onLogout: () => void;
+  mobileOpen?: boolean;
+  onMobileClose?: () => void;
+}
+
+const items: { id: View; label: string; icon: string }[] = [
+  { id: 'home', label: 'Início', icon: '🏠' },
+  { id: 'subscription', label: 'Assinatura', icon: '📋' },
+];
+
+export default function Sidebar({ activeView, setActiveView, onLogout, mobileOpen, onMobileClose }: SidebarProps) {
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onMobileClose?.(); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [mobileOpen, onMobileClose]);
+
+  const handleSelect = (view: View) => {
+    setActiveView(view);
+    onMobileClose?.();
+  };
+
   return (
-    <aside className="sidebar">
-      <div className="sidebar-logo"><h1><Image src="/logo.png" alt="Clube do Café" width={24} height={24} className="logo-inline" /> Clube do Café</h1></div>
-      <nav className="sidebar-nav">
-        <button className={`nav-item ${activeView === 'home' ? 'active' : ''}`} onClick={() => setActiveView('home')}><span className="nav-icon">🏠</span><span>Início</span></button>
-        <button className={`nav-item ${activeView === 'subscription' ? 'active' : ''}`} onClick={() => setActiveView('subscription')}><span className="nav-icon">📋</span><span>Assinatura</span></button>
-      </nav>
-      <button className="logout-btn" onClick={onLogout}><span>Sair</span></button>
-    </aside>
+    <>
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-ink/40 backdrop-blur-sm md:hidden"
+          onClick={onMobileClose}
+          aria-hidden="true"
+        />
+      )}
+      <aside
+        className={cn(
+          'fixed inset-y-0 left-0 z-50 w-64 transform bg-white border-r border-border-soft shadow-lg transition-transform md:relative md:translate-x-0 md:shadow-none flex flex-col',
+          mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+        )}
+        aria-label="Navegação principal"
+      >
+        <div className="gradient-primary px-6 py-6 flex items-center gap-2">
+          <Image src="/logo.png" alt="" width={32} height={32} className="object-contain" />
+          <h1 className="text-lg font-bold text-white tracking-tight">Clube do Café</h1>
+        </div>
+
+        <nav className="flex-1 px-3 py-4 flex flex-col gap-1">
+          {items.map((item) => {
+            const active = activeView === item.id;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => handleSelect(item.id)}
+                aria-current={active ? 'page' : undefined}
+                className={cn(
+                  'flex items-center gap-3 rounded-lg px-3.5 py-2.5 text-sm font-medium transition-colors text-left',
+                  'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-secondary',
+                  active
+                    ? 'bg-secondary/10 text-secondary-dark'
+                    : 'text-ink-soft hover:bg-warm-gray hover:text-primary'
+                )}
+              >
+                <span aria-hidden="true" className="text-base">{item.icon}</span>
+                <span>{item.label}</span>
+                {active && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-secondary" aria-hidden="true" />}
+              </button>
+            );
+          })}
+        </nav>
+
+        <div className="border-t border-border-soft p-3">
+          <button
+            type="button"
+            onClick={onLogout}
+            className="flex w-full items-center gap-3 rounded-lg px-3.5 py-2.5 text-sm font-medium text-ink-soft transition-colors hover:bg-maroon/10 hover:text-maroon focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-secondary"
+          >
+            <span aria-hidden="true">↪</span>
+            <span>Sair</span>
+          </button>
+        </div>
+      </aside>
+    </>
   );
 }

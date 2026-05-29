@@ -4,7 +4,20 @@ import { useState, useEffect, useCallback } from 'react';
 import { pagamentoService, userService } from '@/services/api';
 import type { Pagamento } from '@/types/payments';
 import type { User } from '@/types/user';
-import './AdminPayments.css';
+import { Badge, Card, Skeleton } from '@/components/ui';
+import { cn } from '@/lib/cn';
+
+const statusLabel: Record<string, string> = {
+  PENDENTE: 'Pendente', ATRASADO: 'Atrasado', PAGO: 'Pago', CANCELADO: 'Cancelado',
+};
+const statusTone = (s: string) =>
+  s === 'PAGO' ? 'success' as const
+  : s === 'ATRASADO' ? 'danger' as const
+  : s === 'PENDENTE' ? 'warning' as const
+  : 'neutral' as const;
+const fmtCurrency = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
+const fmtDate = (s: string) => new Date(s).toLocaleDateString('pt-BR');
+const fmtDateTime = (s: string) => new Date(s).toLocaleString('pt-BR');
 
 export default function AdminPayments() {
   const [pagamentos, setPagamentos] = useState<Pagamento[]>([]);
@@ -15,203 +28,213 @@ export default function AdminPayments() {
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
-      const [pagamentosData, usersData] = await Promise.all([
+      const [p, u] = await Promise.all([
         pagamentoService.getAllPagamentos(),
-        userService.getAllUsers()
+        userService.getAllUsers(),
       ]);
-
-      setPagamentos(pagamentosData);
-      setUsers(usersData);
-    } catch (error) {
-      console.error('Erro ao carregar dados:', error);
+      setPagamentos(p);
+      setUsers(u);
+    } catch (e) {
+      console.error('Erro ao carregar dados:', e);
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+  useEffect(() => { loadData(); }, [loadData]);
 
-  const realizados = pagamentos.filter(p => p.status === 'PAGO');
-  const pendentes = pagamentos.filter(p => p.status === 'PENDENTE' || p.status === 'ATRASADO');
-
-  const getUserById = (userId: string) => {
-    return users.find(u => u.id === userId);
-  };
-
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(value);
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('pt-BR');
-  };
-
-  const formatDateTime = (dateString: string) => {
-    return new Date(dateString).toLocaleString('pt-BR');
-  };
-
-  const getStatusLabel = (status: string) => {
-    const labels: { [key: string]: string } = {
-      'PENDENTE': 'Pendente',
-      'ATRASADO': 'Atrasado',
-      'PAGO': 'Pago',
-      'CANCELADO': 'Cancelado'
-    };
-    return labels[status] || status;
-  };
-
-  const getTotalRealizados = () => {
-    return realizados.reduce((sum, p) => sum + p.valor, 0);
-  };
-
-  const getTotalPendentes = () => {
-    return pendentes
-      .filter(p => p.status === 'PENDENTE')
-      .reduce((sum, p) => sum + p.valor, 0);
-  };
+  const realizados = pagamentos.filter((p) => p.status === 'PAGO');
+  const pendentes = pagamentos.filter((p) => p.status === 'PENDENTE' || p.status === 'ATRASADO');
+  const totalRealizados = realizados.reduce((s, p) => s + p.valor, 0);
+  const totalPendentes = pendentes.filter((p) => p.status === 'PENDENTE').reduce((s, p) => s + p.valor, 0);
+  const atrasados = pendentes.filter((p) => p.status === 'ATRASADO').length;
+  const getUser = (id: string) => users.find((u) => u.id === id);
 
   if (loading) {
-    return <div className="loading">Carregando pagamentos...</div>;
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-20 w-full rounded-2xl" />
+        <Skeleton className="h-64 w-full rounded-2xl" />
+      </div>
+    );
   }
 
   return (
-    <div className="admin-payments-container">
-      <div className="admin-section-header">
-        <h2>Gerenciar Pagamentos</h2>
-        
-        <div className="payments-stats">
-          <div className="stat-card success">
-            <span className="stat-value">{realizados.length}</span>
-            <span className="stat-label">Pagamentos Realizados</span>
-            <span className="stat-total">{formatCurrency(getTotalRealizados())}</span>
-          </div>
-          <div className="stat-card warning">
-            <span className="stat-value">
-              {pendentes.filter(p => p.status === 'PENDENTE').length}
-            </span>
-            <span className="stat-label">Pagamentos Pendentes</span>
-            <span className="stat-total">{formatCurrency(getTotalPendentes())}</span>
-          </div>
-          <div className="stat-card danger">
-            <span className="stat-value">
-              {pendentes.filter(p => p.status === 'ATRASADO').length}
-            </span>
-            <span className="stat-label">Pagamentos Atrasados</span>
-          </div>
-        </div>
+    <div className="space-y-5 max-w-6xl">
+      <div>
+        <h2 className="text-xl font-bold text-ink">Pagamentos</h2>
+        <p className="text-sm text-ink-soft">Realizados e pendentes</p>
       </div>
 
-      <div className="tabs">
-        <button
-          className={`tab ${activeTab === 'realizados' ? 'active' : ''}`}
-          onClick={() => setActiveTab('realizados')}
-        >
-          Pagamentos Realizados ({realizados.length})
-        </button>
-        <button
-          className={`tab ${activeTab === 'pendentes' ? 'active' : ''}`}
-          onClick={() => setActiveTab('pendentes')}
-        >
-          Pagamentos Pendentes ({pendentes.length})
-        </button>
+      <div className="grid gap-3 grid-cols-1 md:grid-cols-3">
+        <Stat label="Realizados" value={realizados.length} sub={fmtCurrency(totalRealizados)} tone="success" />
+        <Stat label="Pendentes" value={pendentes.filter((p) => p.status === 'PENDENTE').length} sub={fmtCurrency(totalPendentes)} tone="warning" />
+        <Stat label="Atrasados" value={atrasados} tone="danger" />
+      </div>
+
+      <div role="tablist" aria-label="Filtrar pagamentos" className="flex gap-1 p-1 bg-white rounded-xl border border-border-soft w-fit">
+        {(['realizados', 'pendentes'] as const).map((t) => (
+          <button
+            key={t}
+            role="tab"
+            aria-selected={activeTab === t}
+            onClick={() => setActiveTab(t)}
+            className={cn(
+              'px-4 py-2 text-sm font-medium rounded-lg transition-colors',
+              'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-secondary',
+              activeTab === t ? 'bg-secondary text-white shadow-sm' : 'text-ink-soft hover:text-primary'
+            )}
+          >
+            {t === 'realizados' ? `Realizados (${realizados.length})` : `Pendentes (${pendentes.length})`}
+          </button>
+        ))}
       </div>
 
       {activeTab === 'realizados' ? (
-        <div className="payments-table-container">
-          <table className="payments-table">
-            <thead>
-              <tr>
-                <th>Usuário</th>
-                <th>Valor</th>
-                <th>Forma de Pagamento</th>
-                <th>Data do Pagamento</th>
-                <th>Observação</th>
-              </tr>
-            </thead>
-            <tbody>
-              {realizados.map(pagamento => {
-                const user = getUserById(pagamento.user_id);
-                
-                return (
-                  <tr key={pagamento.id}>
-                    <td>
-                      <div className="user-info">
-                        <strong>{user?.nome || 'Usuário não encontrado'}</strong>
-                        <span className="user-email">{user?.email}</span>
-                      </div>
-                    </td>
-                    <td className="value-cell">{formatCurrency(pagamento.valor)}</td>
-                    <td>
-                      <span className="payment-method">{pagamento.forma_pagamento || '-'}</span>
-                    </td>
-                    <td>{pagamento.data_pagamento ? formatDateTime(pagamento.data_pagamento) : '-'}</td>
-                    <td className="observation">{pagamento.observacao || '-'}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-
-          {realizados.length === 0 && (
-            <div className="no-data">
-              <p>Nenhum pagamento realizado ainda.</p>
-            </div>
-          )}
-        </div>
+        <RealizadosTable items={realizados} getUser={getUser} />
       ) : (
-        <div className="payments-table-container">
-          <table className="payments-table">
-            <thead>
-              <tr>
-                <th>Usuário</th>
-                <th>Valor</th>
-                <th>Status</th>
-                <th>Data Vencimento</th>
-                <th>Descrição</th>
-              </tr>
-            </thead>
-            <tbody>
-              {pendentes.map(pendente => {
-                const user = getUserById(pendente.user_id);
-                const isVencido = new Date(pendente.data_vencimento) < new Date();
-                
-                return (
-                  <tr key={pendente.id} className={isVencido ? 'overdue' : ''}>
-                    <td>
-                      <div className="user-info">
-                        <strong>{user?.nome || 'Usuário não encontrado'}</strong>
-                        <span className="user-email">{user?.email}</span>
-                      </div>
-                    </td>
-                    <td className="value-cell">{formatCurrency(pendente.valor)}</td>
-                    <td>
-                      <span className={`status-badge ${pendente.status.toLowerCase()}`}>
-                        {getStatusLabel(pendente.status)}
-                      </span>
-                    </td>
-                    <td>
-                      {formatDate(pendente.data_vencimento)}
-                      {isVencido && <span className="overdue-label"> (Vencido)</span>}
-                    </td>
-                    <td className="description">{pendente.descricao}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-
-          {pendentes.length === 0 && (
-            <div className="no-data">
-              <p>Nenhum pagamento pendente.</p>
-            </div>
-          )}
-        </div>
+        <PendentesTable items={pendentes} getUser={getUser} />
       )}
     </div>
   );
+}
+
+function RealizadosTable({ items, getUser }: { items: Pagamento[]; getUser: (id: string) => User | undefined }) {
+  if (items.length === 0) {
+    return <Card padding="lg" className="text-center text-sm text-ink-muted">Nenhum pagamento realizado ainda.</Card>;
+  }
+  return (
+    <>
+      <div className="grid gap-3 md:hidden">
+        {items.map((p) => {
+          const user = getUser(p.user_id);
+          return (
+            <Card key={p.id} padding="md">
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <div className="min-w-0">
+                  <p className="font-semibold text-ink truncate">{user?.nome || '—'}</p>
+                  <p className="text-xs text-ink-soft truncate">{user?.email}</p>
+                </div>
+                <span className="font-bold text-success">{fmtCurrency(p.valor)}</span>
+              </div>
+              <div className="text-xs text-ink-muted">
+                {p.forma_pagamento || '—'} · {p.data_pagamento ? fmtDateTime(p.data_pagamento) : '—'}
+              </div>
+            </Card>
+          );
+        })}
+      </div>
+      <Card padding="none" className="hidden md:block overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-warm-gray/60 text-xs uppercase tracking-wider text-ink-muted">
+              <tr><Th>Usuário</Th><Th>Valor</Th><Th>Forma</Th><Th>Data</Th><Th>Observação</Th></tr>
+            </thead>
+            <tbody className="divide-y divide-border-soft">
+              {items.map((p) => {
+                const user = getUser(p.user_id);
+                return (
+                  <tr key={p.id} className="hover:bg-warm-gray/30 transition-colors">
+                    <Td>
+                      <div className="font-medium text-ink">{user?.nome || '—'}</div>
+                      <div className="text-xs text-ink-muted">{user?.email}</div>
+                    </Td>
+                    <Td className="font-semibold text-success">{fmtCurrency(p.valor)}</Td>
+                    <Td>{p.forma_pagamento || '—'}</Td>
+                    <Td className="text-ink-muted">
+                      {p.data_pagamento ? fmtDateTime(p.data_pagamento) : '—'}
+                    </Td>
+                    <Td className="text-ink-soft">{p.observacao || '—'}</Td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+    </>
+  );
+}
+
+function PendentesTable({ items, getUser }: { items: Pagamento[]; getUser: (id: string) => User | undefined }) {
+  if (items.length === 0) {
+    return <Card padding="lg" className="text-center text-sm text-ink-muted">Nenhum pagamento pendente.</Card>;
+  }
+  return (
+    <>
+      <div className="grid gap-3 md:hidden">
+        {items.map((p) => {
+          const user = getUser(p.user_id);
+          const vencido = new Date(p.data_vencimento) < new Date();
+          return (
+            <Card key={p.id} padding="md" className={vencido ? 'ring-1 ring-maroon/30' : ''}>
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <div className="min-w-0">
+                  <p className="font-semibold text-ink truncate">{user?.nome || '—'}</p>
+                  <p className="text-xs text-ink-soft truncate">{user?.email}</p>
+                </div>
+                <Badge tone={statusTone(p.status)}>{statusLabel[p.status]}</Badge>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-ink-soft">{p.descricao}</span>
+                <span className="font-bold text-secondary">{fmtCurrency(p.valor)}</span>
+              </div>
+              <p className="text-xs text-ink-muted mt-1">
+                Vence em {fmtDate(p.data_vencimento)}
+                {vencido && <span className="text-maroon font-medium"> · vencido</span>}
+              </p>
+            </Card>
+          );
+        })}
+      </div>
+      <Card padding="none" className="hidden md:block overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-warm-gray/60 text-xs uppercase tracking-wider text-ink-muted">
+              <tr><Th>Usuário</Th><Th>Valor</Th><Th>Status</Th><Th>Vencimento</Th><Th>Descrição</Th></tr>
+            </thead>
+            <tbody className="divide-y divide-border-soft">
+              {items.map((p) => {
+                const user = getUser(p.user_id);
+                const vencido = new Date(p.data_vencimento) < new Date();
+                return (
+                  <tr key={p.id} className={cn('hover:bg-warm-gray/30 transition-colors', vencido && 'bg-maroon/5')}>
+                    <Td>
+                      <div className="font-medium text-ink">{user?.nome || '—'}</div>
+                      <div className="text-xs text-ink-muted">{user?.email}</div>
+                    </Td>
+                    <Td className="font-semibold text-secondary">{fmtCurrency(p.valor)}</Td>
+                    <Td><Badge tone={statusTone(p.status)}>{statusLabel[p.status]}</Badge></Td>
+                    <Td className="text-ink-muted">
+                      {fmtDate(p.data_vencimento)}
+                      {vencido && <span className="ml-1 text-maroon text-xs font-medium">vencido</span>}
+                    </Td>
+                    <Td className="text-ink-soft">{p.descricao}</Td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+    </>
+  );
+}
+
+function Stat({ label, value, sub, tone = 'neutral' }: { label: string; value: number; sub?: string; tone?: 'neutral' | 'success' | 'warning' | 'danger' }) {
+  const ring =
+    tone === 'success' ? 'ring-success/20' : tone === 'warning' ? 'ring-accent/30' : tone === 'danger' ? 'ring-maroon/20' : 'ring-border';
+  return (
+    <Card padding="md" className={`ring-1 ${ring}`}>
+      <p className="text-xs uppercase tracking-wider text-ink-muted font-semibold">{label}</p>
+      <p className="text-2xl font-bold text-ink mt-1">{value}</p>
+      {sub && <p className="text-sm text-ink-soft mt-1">{sub}</p>}
+    </Card>
+  );
+}
+function Th({ children }: { children: React.ReactNode }) {
+  return <th scope="col" className="px-4 py-3 text-left font-semibold">{children}</th>;
+}
+function Td({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+  return <td className={`px-4 py-3 ${className}`}>{children}</td>;
 }

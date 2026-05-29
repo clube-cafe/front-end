@@ -2,10 +2,18 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { pagamentoService } from '@/services/api';
-import './PaymentModal.css';
 import ConfirmModal from '@/components/common/ConfirmModal';
+import { Alert, Button, Modal } from '@/components/ui';
 
-interface PaymentModalProps { pagamentoId: string; valor: number; onSuccess: () => void; onCancel: () => void; }
+interface PaymentModalProps {
+  pagamentoId: string;
+  valor: number;
+  onSuccess: () => void;
+  onCancel: () => void;
+}
+
+const fmtCurrency = (v: number) =>
+  new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
 
 export default function PaymentModal({ pagamentoId, valor, onSuccess, onCancel }: PaymentModalProps) {
   const [loading, setLoading] = useState(false);
@@ -18,16 +26,28 @@ export default function PaymentModal({ pagamentoId, valor, onSuccess, onCancel }
   const generateQRCode = useCallback(async () => {
     try {
       setLoading(true);
-      const mockPixCode = `00020126580014br.gov.bcb.pix0136${pagamentoId}520400005303986540${valor.toFixed(2)}5802BR5925CLUBE DO CAFE6009SAO PAULO62070503***6304`;
+      const mockPixCode = `00020126580014br.gov.bcb.pix0136${pagamentoId}520400005303986540${valor.toFixed(
+        2
+      )}5802BR5925CLUBE DO CAFE6009SAO PAULO62070503***6304`;
       setPixCopiaECola(mockPixCode);
-      setQrCodeData(`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(mockPixCode)}`);
-    } catch { setError('Erro ao gerar QR Code'); }
-    finally { setLoading(false); }
+      setQrCodeData(
+        `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(mockPixCode)}`
+      );
+    } catch {
+      setError('Erro ao gerar QR Code');
+    } finally {
+      setLoading(false);
+    }
   }, [pagamentoId, valor]);
 
-  useEffect(() => { generateQRCode(); }, [generateQRCode]);
+  useEffect(() => {
+    generateQRCode();
+  }, [generateQRCode]);
 
-  const handleCopyPix = () => { navigator.clipboard.writeText(pixCopiaECola); setShowCopiedAlert(true); };
+  const handleCopyPix = () => {
+    navigator.clipboard.writeText(pixCopiaECola);
+    setShowCopiedAlert(true);
+  };
 
   const executePayment = async () => {
     setShowConfirmPayment(false);
@@ -37,30 +57,124 @@ export default function PaymentModal({ pagamentoId, valor, onSuccess, onCancel }
       onSuccess();
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
-      console.error('Erro ao confirmar pagamento:', err);
       setError(error.response?.data?.message || 'Erro ao confirmar pagamento');
-    } finally { setLoading(false); }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="payment-modal-overlay">
-      <div className="payment-modal">
-        <div className="payment-header"><h2>💳 Pagamento PIX</h2><button className="close-btn" onClick={onCancel}>✕</button></div>
-        {error && <div className="error-message">{error}</div>}
-        <div className="payment-content">
-          <div className="payment-value"><span className="label">Valor a pagar:</span><span className="value">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor)}</span></div>
-          {loading ? <div className="loading">Gerando QR Code...</div> : (
+    <>
+      <Modal
+        open
+        onClose={onCancel}
+        title="Pagamento via PIX"
+        size="md"
+        footer={
+          <>
+            <Button variant="secondary" onClick={onCancel} disabled={loading}>
+              Cancelar
+            </Button>
+            <Button
+              variant="success"
+              onClick={() => setShowConfirmPayment(true)}
+              disabled={loading}
+            >
+              ✓ Já paguei
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-5">
+          {error && <Alert tone="error">{error}</Alert>}
+
+          <div className="text-center bg-warm-gray/50 rounded-xl p-4">
+            <p className="text-xs uppercase tracking-wider text-ink-muted font-semibold">
+              Valor a pagar
+            </p>
+            <p className="text-3xl font-bold text-secondary mt-1">{fmtCurrency(valor)}</p>
+          </div>
+
+          {loading && !qrCodeData ? (
+            <div className="flex items-center justify-center py-8" aria-live="polite">
+              <span
+                className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-secondary border-t-transparent"
+                aria-hidden="true"
+              />
+              <span className="ml-3 text-sm text-ink-soft">Gerando QR Code...</span>
+            </div>
+          ) : (
             <>
-              <div className="qr-code-section"><h3>Escaneie o QR Code</h3>{qrCodeData && <img src={qrCodeData} alt="QR Code PIX" className="qr-code-image" />}</div>
-              <div className="pix-copy-section"><h3>PIX Copia e Cola</h3><div className="pix-code-container"><input type="text" value={pixCopiaECola} readOnly className="pix-code-input" /><button onClick={handleCopyPix} className="copy-btn">📋 Copiar</button></div></div>
-              <div className="payment-instructions"><h4>📱 Como pagar:</h4><ol><li>Abra o app do seu banco</li><li>Escolha pagar via PIX</li><li>Escaneie o QR Code ou cole o código</li><li>Confirme o pagamento</li><li>Clique em &quot;Já paguei&quot; abaixo</li></ol></div>
-              <div className="payment-actions"><button onClick={() => setShowConfirmPayment(true)} className="confirm-btn" disabled={loading}>✓ Já paguei</button><button onClick={onCancel} className="cancel-btn" disabled={loading}>Cancelar</button></div>
+              <div>
+                <h3 className="text-sm font-semibold text-ink mb-2">Escaneie o QR Code</h3>
+                <div className="flex justify-center bg-white border-2 border-border-soft rounded-xl p-4">
+                  {qrCodeData && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={qrCodeData}
+                      alt="QR Code para pagamento PIX"
+                      className="h-56 w-56 object-contain"
+                    />
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-sm font-semibold text-ink mb-2">PIX Copia e Cola</h3>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={pixCopiaECola}
+                    readOnly
+                    aria-label="Código PIX copia e cola"
+                    className="flex-1 min-w-0 rounded-lg border border-border bg-warm-gray/40 px-3 py-2 text-xs font-mono text-ink-soft focus:outline-none focus:ring-2 focus:ring-secondary/30"
+                  />
+                  <Button variant="secondary" size="sm" onClick={handleCopyPix}>
+                    📋 Copiar
+                  </Button>
+                </div>
+              </div>
+
+              <div className="rounded-lg bg-secondary/5 border border-secondary/20 p-4">
+                <h4 className="text-sm font-semibold text-secondary-dark mb-2">
+                  Como pagar
+                </h4>
+                <ol className="text-xs text-ink-soft space-y-1 list-decimal list-inside">
+                  <li>Abra o app do seu banco</li>
+                  <li>Escolha pagar via PIX</li>
+                  <li>Escaneie o QR Code ou cole o código</li>
+                  <li>Confirme o pagamento</li>
+                  <li>Clique em &quot;Já paguei&quot; abaixo</li>
+                </ol>
+              </div>
             </>
           )}
         </div>
-        {showConfirmPayment && <ConfirmModal icon="💳" title="Confirmar Pagamento" message="Confirmar que o pagamento foi realizado?" confirmText="Sim, já paguei" cancelText="Voltar" variant="success" onConfirm={executePayment} onCancel={() => setShowConfirmPayment(false)} />}
-        {showCopiedAlert && <ConfirmModal icon="✅" title="Copiado!" message="Código PIX copiado para a área de transferência." confirmText="OK" variant="success" alertMode onConfirm={() => setShowCopiedAlert(false)} />}
-      </div>
-    </div>
+      </Modal>
+
+      {showConfirmPayment && (
+        <ConfirmModal
+          icon="💳"
+          title="Confirmar pagamento"
+          message="Confirmar que o pagamento foi realizado?"
+          confirmText="Sim, já paguei"
+          cancelText="Voltar"
+          variant="success"
+          onConfirm={executePayment}
+          onCancel={() => setShowConfirmPayment(false)}
+        />
+      )}
+      {showCopiedAlert && (
+        <ConfirmModal
+          icon="✅"
+          title="Copiado!"
+          message="Código PIX copiado para a área de transferência."
+          confirmText="OK"
+          variant="success"
+          alertMode
+          onConfirm={() => setShowCopiedAlert(false)}
+        />
+      )}
+    </>
   );
 }

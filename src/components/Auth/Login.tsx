@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { authService } from '@/services/api';
 import Image from 'next/image';
-import './Login.css';
+import { authService } from '@/services/api';
+import { Alert, Button, Input } from '@/components/ui';
 
 interface LoginProps {
   onSuccess?: (userId: string, userType: 'ADMIN' | 'ASSINANTE') => void;
@@ -27,35 +27,79 @@ export default function Login({ onSuccess, onSwitchToRegister }: LoginProps) {
       if (onSuccess) onSuccess(response.user.id, response.user.tipo_user ?? 'ASSINANTE');
     } catch (err: unknown) {
       const error = err as { response?: { status?: number } };
-      if (error.response?.status === 400) setError('Email ou senha incorretos');
+      if (error.response?.status === 400 || error.response?.status === 401) setError('Email ou senha incorretos');
+      else if (error.response?.status === 429) setError('Muitas tentativas. Tente novamente em alguns minutos.');
       else if (error.response?.status === 500) setError('Erro no servidor. Tente novamente mais tarde.');
       else setError('Erro ao fazer login. Tente novamente.');
     } finally { setLoading(false); }
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-card">
-        <div className="auth-header">
-          <h1><Image src="/logo.png" alt="Clube do Café" width={40} height={40} className="logo-inline" /> Clube do Café</h1>
-          <p>Entre para acessar sua conta</p>
-        </div>
-        <form onSubmit={handleSubmit} className="auth-form">
-          {error && <div className="error-message">{error}</div>}
-          <div className="form-group">
-            <label htmlFor="email">E-mail</label>
-            <input type="email" id="email" name="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="seu@email.com" disabled={loading} autoComplete="email" required />
-          </div>
-          <div className="form-group">
-            <label htmlFor="password">Senha</label>
-            <input type="password" id="password" name="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" disabled={loading} autoComplete="current-password" required />
-          </div>
-          <button type="submit" className="submit-button" disabled={loading}>{loading ? 'Entrando...' : 'Entrar'}</button>
-        </form>
-        <div className="auth-footer">
-          <p>Não tem uma conta?{' '}<button type="button" onClick={onSwitchToRegister} className="link-button">Criar conta</button></p>
-        </div>
+    <main className="min-h-screen flex items-center justify-center bg-cream px-4 py-12">
+      <div className="absolute inset-0 -z-10 overflow-hidden">
+        <div className="absolute top-0 right-0 h-96 w-96 rounded-full bg-secondary/10 blur-3xl" />
+        <div className="absolute bottom-0 left-0 h-96 w-96 rounded-full bg-accent/10 blur-3xl" />
       </div>
-    </div>
+
+      <div className="w-full max-w-md">
+        <div className="rounded-2xl bg-white shadow-xl border border-border-soft overflow-hidden">
+          <div className="gradient-primary px-8 pt-10 pb-8 text-center">
+            <div className="inline-flex items-center justify-center gap-2 mb-2">
+              <Image src="/logo.png" alt="" width={48} height={48} className="object-contain" />
+              <h1 className="text-2xl font-bold text-white tracking-tight">Clube do Café</h1>
+            </div>
+            <p className="text-white/80 text-sm">Entre para acessar sua conta</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="px-8 py-8 flex flex-col gap-5" noValidate>
+            {error && <Alert tone="error">{error}</Alert>}
+
+            <Input
+              label="E-mail"
+              type="email"
+              name="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="seu@email.com"
+              disabled={loading}
+              autoComplete="email"
+              required
+              autoFocus
+            />
+
+            <Input
+              label="Senha"
+              type="password"
+              name="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              disabled={loading}
+              autoComplete="current-password"
+              required
+            />
+
+            <Button type="submit" loading={loading} fullWidth size="lg">
+              {loading ? 'Entrando...' : 'Entrar'}
+            </Button>
+          </form>
+
+          <div className="border-t border-border-soft bg-warm-gray/30 px-8 py-5 text-center text-sm text-ink-soft">
+            Não tem uma conta?{' '}
+            <button
+              type="button"
+              onClick={onSwitchToRegister}
+              className="font-semibold text-secondary hover:text-secondary-dark transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-secondary rounded"
+            >
+              Criar conta
+            </button>
+          </div>
+        </div>
+
+        <p className="mt-6 text-center text-xs text-ink-muted">
+          Gestão de assinaturas do clube de café
+        </p>
+      </div>
+    </main>
   );
 }

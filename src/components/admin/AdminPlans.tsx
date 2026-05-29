@@ -3,21 +3,23 @@
 import { useState, useEffect, useCallback } from 'react';
 import { planoService } from '@/services/api';
 import type { PlanoAssinatura } from '@/types/assinatura';
-import './AdminPlans.css';
 import ConfirmModal from '@/components/common/ConfirmModal';
+import { Alert, Badge, Button, Card, Input, Modal, Skeleton } from '@/components/ui';
+import { cn } from '@/lib/cn';
 
 type Periodicidade = PlanoAssinatura['periodicidade'];
+
+const periodLabel: Record<string, string> = {
+  MENSAL: 'Mensal', TRIMESTRAL: 'Trimestral', SEMESTRAL: 'Semestral', ANUAL: 'Anual',
+};
+const fmtCurrency = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
 
 export default function AdminPlans() {
   const [planos, setPlanos] = useState<PlanoAssinatura[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
-    nome: '',
-    descricao: '',
-    valor: '',
-    periodicidade: 'MENSAL',
-    ativo: true
+    nome: '', descricao: '', valor: '', periodicidade: 'MENSAL', ativo: true,
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -28,28 +30,29 @@ export default function AdminPlans() {
       setLoading(true);
       const data = await planoService.getAllPlanos();
       setPlanos(data);
-    } catch (error) {
-      console.error('Erro ao carregar planos:', error);
+    } catch (e) {
+      console.error('Erro ao carregar planos:', e);
       setError('Erro ao carregar planos');
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => {
-    loadPlanos();
-  }, [loadPlanos]);
+  useEffect(() => { loadPlanos(); }, [loadPlanos]);
+
+  const resetForm = () => {
+    setFormData({ nome: '', descricao: '', valor: '', periodicidade: 'MENSAL', ativo: true });
+    setShowForm(false);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
+    setError(''); setSuccess('');
 
     if (!formData.nome || !formData.valor) {
       setError('Nome e valor são obrigatórios');
       return;
     }
-
     const valorNumerico = parseFloat(formData.valor);
     if (isNaN(valorNumerico) || valorNumerico <= 0) {
       setError('Valor deve ser um número positivo');
@@ -62,7 +65,7 @@ export default function AdminPlans() {
         descricao: formData.descricao,
         valor: valorNumerico,
         periodicidade: formData.periodicidade as Periodicidade,
-        ativo: formData.ativo
+        ativo: formData.ativo,
       });
       setSuccess('Plano criado com sucesso!');
       resetForm();
@@ -73,233 +76,172 @@ export default function AdminPlans() {
     }
   };
 
-  const handleToggleAtivo = (plano: PlanoAssinatura) => {
-    setConfirmModal({ show: true, plano });
-  };
-
   const confirmToggleAtivo = async () => {
     const plano = confirmModal.plano;
     setConfirmModal({ show: false, plano: null });
     if (!plano) return;
     const novoStatus = !plano.ativo;
-    const acao = novoStatus ? 'ativar' : 'desativar';
     try {
       await planoService.updatePlano(plano.id, { ativo: novoStatus });
       setSuccess(`Plano ${novoStatus ? 'ativado' : 'desativado'} com sucesso!`);
       loadPlanos();
     } catch (e) {
       const err = e as { response?: { data?: { message?: string } } };
-      setError(err.response?.data?.message || `Erro ao ${acao} plano`);
+      setError(err.response?.data?.message || `Erro ao ${novoStatus ? 'ativar' : 'desativar'} plano`);
     }
   };
 
-  const resetForm = () => {
-    setFormData({
-      nome: '',
-      descricao: '',
-      valor: '',
-      periodicidade: 'MENSAL',
-      ativo: true
-    });
-    setShowForm(false);
-  };
-
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(value);
-  };
-
-  const getPeriodicidadeLabel = (periodicidade: string) => {
-    const labels: { [key: string]: string } = {
-      'MENSAL': 'Mensal',
-      'TRIMESTRAL': 'Trimestral',
-      'SEMESTRAL': 'Semestral',
-      'ANUAL': 'Anual'
-    };
-    return labels[periodicidade] || periodicidade;
-  };
-
   if (loading) {
-    return <div className="loading">Carregando planos...</div>;
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-20 w-full rounded-2xl" />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-56 w-full rounded-2xl" />)}
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="admin-plans-container">
-      <div className="admin-section-header">
-        <h2>Gerenciar Planos</h2>
-        
-        <div className="plans-stats">
-          <div className="stat-card">
-            <span className="stat-value">{planos.length}</span>
-            <span className="stat-label">Total de Planos</span>
-          </div>
-          <div className="stat-card active">
-            <span className="stat-value">{planos.filter(p => p.ativo).length}</span>
-            <span className="stat-label">Planos Ativos</span>
-          </div>
-          <div className="stat-card inactive">
-            <span className="stat-value">{planos.filter(p => !p.ativo).length}</span>
-            <span className="stat-label">Planos Inativos</span>
-          </div>
+    <div className="space-y-5 max-w-6xl">
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <div>
+          <h2 className="text-xl font-bold text-ink">Planos</h2>
+          <p className="text-sm text-ink-soft">Crie, ative e desative planos de assinatura</p>
         </div>
+        <Button onClick={() => setShowForm(true)}>+ Novo plano</Button>
       </div>
 
-      {error && <div className="error-message">{error}</div>}
-      {success && <div className="success-message">{success}</div>}
-
-      <div className="action-bar">
-        <button 
-          className="create-plan-btn"
-          onClick={() => {
-            resetForm();
-            setShowForm(true);
-          }}
-        >
-          <span className="btn-icon">+</span> Novo Plano
-        </button>
+      <div className="grid gap-3 grid-cols-3">
+        <Stat label="Total" value={planos.length} />
+        <Stat label="Ativos" value={planos.filter((p) => p.ativo).length} tone="success" />
+        <Stat label="Inativos" value={planos.filter((p) => !p.ativo).length} tone="neutral" />
       </div>
 
-      {showForm && (
-        <div className="plan-form-modal">
-          <div className="plan-form-card">
-            <div className="form-header">
-              <h3>Criar Novo Plano</h3>
-              <button className="close-btn" onClick={resetForm}>✕</button>
-            </div>
+      {error && <Alert tone="error">{error}</Alert>}
+      {success && <Alert tone="success">{success}</Alert>}
 
-            <form onSubmit={handleSubmit}>
-              <div className="form-group">
-                <label htmlFor="nome">Nome do Plano *</label>
-                <input
-                  type="text"
-                  id="nome"
-                  value={formData.nome}
-                  onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                  placeholder="Ex: Plano Básico"
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="descricao">Descrição</label>
-                <textarea
-                  id="descricao"
-                  value={formData.descricao}
-                  onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
-                  placeholder="Descrição do plano"
-                  rows={3}
-                />
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="valor">Valor (R$) *</label>
-                  <input
-                    type="number"
-                    id="valor"
-                    value={formData.valor}
-                    onChange={(e) => setFormData({ ...formData, valor: e.target.value })}
-                    placeholder="35.00"
-                    step="0.01"
-                    min="0"
-                    required
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="periodicidade">Periodicidade *</label>
-                  <select
-                    id="periodicidade"
-                    value={formData.periodicidade}
-                    onChange={(e) => setFormData({ ...formData, periodicidade: e.target.value })}
-                    required
-                  >
-                    <option value="MENSAL">Mensal</option>
-                    <option value="TRIMESTRAL">Trimestral</option>
-                    <option value="SEMESTRAL">Semestral</option>
-                    <option value="ANUAL">Anual</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label className="checkbox-label">
-                  <input
-                    type="checkbox"
-                    checked={formData.ativo}
-                    onChange={(e) => setFormData({ ...formData, ativo: e.target.checked })}
-                  />
-                  <span>Plano ativo (visível para assinantes)</span>
-                </label>
-              </div>
-
-              <div className="form-actions">
-                <button type="button" className="cancel-btn" onClick={resetForm}>
-                  Cancelar
-                </button>
-                <button type="submit" className="submit-btn">
-                  Criar Plano
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      <div className="plans-grid">
-        {planos.map(plano => (
-          <div key={plano.id} className={`plan-card ${!plano.ativo ? 'inactive' : ''}`}>
-            <div className="plan-card-header">
-              <h3>{plano.nome}</h3>
-              {!plano.ativo && <span className="inactive-badge">Inativo</span>}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {planos.map((plano) => (
+          <Card
+            key={plano.id}
+            padding="lg"
+            className={cn('flex flex-col', !plano.ativo && 'opacity-60')}
+          >
+            <div className="flex items-start justify-between gap-2 mb-2">
+              <h3 className="font-semibold text-ink">{plano.nome}</h3>
+              <Badge tone={plano.ativo ? 'success' : 'neutral'}>
+                {plano.ativo ? 'Ativo' : 'Inativo'}
+              </Badge>
             </div>
 
             {plano.descricao && (
-              <p className="plan-description">{plano.descricao}</p>
+              <p className="text-sm text-ink-soft mb-3">{plano.descricao}</p>
             )}
 
-            <div className="plan-price">
-              <span className="price-value">{formatCurrency(plano.valor)}</span>
-              <span className="price-period">/{getPeriodicidadeLabel(plano.periodicidade)}</span>
+            <div className="flex items-end gap-1 mb-4">
+              <span className="text-2xl font-bold text-secondary">{fmtCurrency(plano.valor)}</span>
+              <span className="text-xs text-ink-muted mb-1">/ {periodLabel[plano.periodicidade]}</span>
             </div>
 
-            <div className="plan-info">
-              <div className="info-item">
-                <span className="info-label">Periodicidade:</span>
-                <span className="info-value">{getPeriodicidadeLabel(plano.periodicidade)}</span>
-              </div>
-              <div className="info-item">
-                <span className="info-label">Status:</span>
-                <span className={`info-value ${plano.ativo ? 'active' : 'inactive'}`}>
-                  {plano.ativo ? 'Ativo' : 'Inativo'}
-                </span>
-              </div>
-            </div>
-
-            <div className="plan-actions">
-              <button 
-                className={plano.ativo ? 'deactivate-btn' : 'activate-btn'}
-                onClick={() => handleToggleAtivo(plano)}
+            <div className="mt-auto">
+              <Button
+                variant={plano.ativo ? 'secondary' : 'success'}
+                onClick={() => setConfirmModal({ show: true, plano })}
+                fullWidth
+                size="sm"
               >
                 {plano.ativo ? 'Desativar' : 'Ativar'}
-              </button>
+              </Button>
             </div>
-          </div>
+          </Card>
         ))}
       </div>
 
       {planos.length === 0 && (
-        <div className="no-data">
-          <p>Nenhum plano cadastrado. Clique em &quot;Novo Plano&quot; para começar.</p>
-        </div>
+        <Card padding="lg" className="text-center text-sm text-ink-muted">
+          Nenhum plano cadastrado. Clique em &quot;Novo plano&quot; para começar.
+        </Card>
       )}
+
+      <Modal
+        open={showForm}
+        onClose={resetForm}
+        title="Criar novo plano"
+        size="md"
+        footer={
+          <>
+            <Button variant="secondary" onClick={resetForm}>Cancelar</Button>
+            <Button form="plan-form" type="submit">Criar plano</Button>
+          </>
+        }
+      >
+        <form id="plan-form" onSubmit={handleSubmit} className="space-y-3">
+          <Input
+            label="Nome do plano *"
+            value={formData.nome}
+            onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+            placeholder="Ex: Plano Básico"
+            required
+          />
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium text-ink-soft" htmlFor="plano-descricao">
+              Descrição
+            </label>
+            <textarea
+              id="plano-descricao"
+              value={formData.descricao}
+              onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
+              placeholder="Descrição do plano"
+              rows={3}
+              className="w-full rounded-lg border border-border bg-white px-3.5 py-2.5 text-sm text-ink placeholder:text-ink-faint focus:outline-none focus:ring-2 focus:ring-secondary/30 focus:border-secondary resize-y"
+            />
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Input
+              label="Valor (R$) *"
+              type="number"
+              step="0.01"
+              min="0"
+              value={formData.valor}
+              onChange={(e) => setFormData({ ...formData, valor: e.target.value })}
+              placeholder="35.00"
+              required
+            />
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-medium text-ink-soft" htmlFor="periodicidade">
+                Periodicidade *
+              </label>
+              <select
+                id="periodicidade"
+                value={formData.periodicidade}
+                onChange={(e) => setFormData({ ...formData, periodicidade: e.target.value })}
+                className="h-11 rounded-lg border border-border bg-white px-3 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-secondary/30 focus:border-secondary"
+                required
+              >
+                <option value="MENSAL">Mensal</option>
+                <option value="TRIMESTRAL">Trimestral</option>
+                <option value="SEMESTRAL">Semestral</option>
+                <option value="ANUAL">Anual</option>
+              </select>
+            </div>
+          </div>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={formData.ativo}
+              onChange={(e) => setFormData({ ...formData, ativo: e.target.checked })}
+              className="h-4 w-4 rounded border-border accent-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-secondary"
+            />
+            <span className="text-sm text-ink-soft">Plano ativo (visível para assinantes)</span>
+          </label>
+        </form>
+      </Modal>
 
       {confirmModal.show && confirmModal.plano && (
         <ConfirmModal
           icon={confirmModal.plano.ativo ? '⏸️' : '▶️'}
-          title={confirmModal.plano.ativo ? 'Desativar Plano' : 'Ativar Plano'}
+          title={confirmModal.plano.ativo ? 'Desativar plano' : 'Ativar plano'}
           message={`Tem certeza que deseja ${confirmModal.plano.ativo ? 'desativar' : 'ativar'} o plano "${confirmModal.plano.nome}"?`}
           confirmText={confirmModal.plano.ativo ? 'Desativar' : 'Ativar'}
           cancelText="Cancelar"
@@ -309,5 +251,15 @@ export default function AdminPlans() {
         />
       )}
     </div>
+  );
+}
+
+function Stat({ label, value, tone = 'neutral' }: { label: string; value: number; tone?: 'neutral' | 'success' | 'warning' }) {
+  const ring = tone === 'success' ? 'ring-success/20' : tone === 'warning' ? 'ring-accent/30' : 'ring-border';
+  return (
+    <Card padding="md" className={`ring-1 ${ring}`}>
+      <p className="text-xs uppercase tracking-wider text-ink-muted font-semibold">{label}</p>
+      <p className="text-2xl font-bold text-ink mt-1">{value}</p>
+    </Card>
   );
 }

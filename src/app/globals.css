@@ -1,149 +1,95 @@
-/* index.css - Reset global */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+@import "tailwindcss";
 
-:root {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-
-  /* ========== PALETA DO LOGOTIPO - CLUBE DO CAFÉ LSD ========== */
-
-  /* Marrom escuro (texto e máquina do logo) */
+@theme {
   --color-primary: #523f3c;
-  --color-primary-light: #5D4037;
-  --color-primary-dark: #2C1A12;
+  --color-primary-light: #5d4037;
+  --color-primary-dark: #2c1a12;
 
-  /* Laranja queimado / Sienna (faixa central do logo) */
-  --color-secondary: #BF6A30;
-  --color-secondary-light: #D4883E;
-  --color-secondary-dark: #A0571F;
+  --color-secondary: #bf6a30;
+  --color-secondary-light: #d4883e;
+  --color-secondary-dark: #a0571f;
 
-  /* Âmbar / Dourado (faixa direita do logo) */
-  --color-accent: #D4A629;
-  --color-accent-light: #E0BC4E;
-  --color-accent-dark: #B8901F;
+  --color-accent: #d4a629;
+  --color-accent-light: #e0bc4e;
+  --color-accent-dark: #b8901f;
 
-  /* Marsala / Vermelho escuro (faixa esquerda do logo) */
-  --color-maroon: #7B2D26;
-  --color-maroon-light: #9B3C34;
-  --color-maroon-dark: #5C1F1A;
+  --color-maroon: #7b2d26;
+  --color-maroon-light: #9b3c34;
+  --color-maroon-dark: #5c1f1a;
 
-  /* Fundos */
-  --bg-cream: #FAF6F1;
-  --bg-warm-gray: #F5EDE3;
-  --bg-white: #FFFFFF;
+  --color-cream: #faf6f1;
+  --color-warm-gray: #f5ede3;
 
-  /* Texto */
-  --text-dark: #3E2723;
-  --text-medium: #6D4C41;
-  --text-light: #8D6E63;
-  --text-muted: #A1887F;
+  --color-ink: #3e2723;
+  --color-ink-soft: #6d4c41;
+  --color-ink-muted: #8d6e63;
+  --color-ink-faint: #a1887f;
 
-  /* Bordas */
-  --border-color: #E8DDD3;
-  --border-light: #F0E8DE;
+  --color-border: #e8ddd3;
+  --color-border-soft: #f0e8de;
 
-  /* Status */
-  --color-success: #2E7D32;
-  --color-success-light: #4CAF50;
-  --color-warning: #E6A817;
-  --color-danger: #7B2D26;
-  --color-info: #BF6A30;
+  --color-success: #2e7d32;
+  --color-success-soft: #4caf50;
+  --color-warning: #e6a817;
+  --color-danger: #7b2d26;
+  --color-info: #bf6a30;
 
-  /* Gradientes */
-  --gradient-primary: linear-gradient(135deg, #3E2723 0%, #5D4037 100%);
-  --gradient-secondary: linear-gradient(135deg, #BF6A30 0%, #D4A629 100%);
-  --gradient-accent: linear-gradient(135deg, #D4A629 0%, #BF6A30 100%);
-  --gradient-success: linear-gradient(135deg, #2E7D32 0%, #4CAF50 100%);
-  --gradient-danger: linear-gradient(135deg, #7B2D26 0%, #9B3C34 100%);
-  --gradient-warning: linear-gradient(135deg, #D4A629 0%, #BF6A30 100%);
+  --radius-card: 16px;
+  --shadow-card: 0 2px 8px -2px rgba(62, 39, 35, 0.08), 0 4px 16px -4px rgba(62, 39, 35, 0.06);
+  --shadow-card-hover: 0 8px 20px -4px rgba(62, 39, 35, 0.12), 0 12px 32px -8px rgba(62, 39, 35, 0.08);
+
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell,
+    "Helvetica Neue", sans-serif;
 }
 
-html, body {
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  padding: 0;
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+    background: var(--color-cream);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    min-height: 100vh;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-secondary);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  ::selection {
+    background: var(--color-secondary);
+    color: white;
+  }
 }
 
-body {
-  margin: 0;
-  min-height: 100vh;
-}
+@layer utilities {
+  .logo-inline {
+    height: 1.2em;
+    width: auto;
+    vertical-align: middle;
+    display: inline;
+    object-fit: contain;
+  }
 
-#__next {
-  width: 100%;
-  min-height: 100vh;
-}
+  .gradient-primary {
+    background: linear-gradient(135deg, var(--color-ink) 0%, var(--color-primary-light) 100%);
+  }
 
-button {
-  font-family: inherit;
-}
-
-/* Logo inline (substitui emoji ☕) */
-.logo-inline {
-  height: 1.2em;
-  width: auto;
-  vertical-align: middle;
-  display: inline;
-  object-fit: contain;
-}
-/* App.css - Limpo para auth */
-#__next {
-  width: 100%;
-  min-height: 100vh;
-}
-
-/* Estilos do Dashboard */
-.dashboard {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background: var(--gradient-primary);
-  padding: 40px;
-  color: white;
-}
-
-.dashboard h1 {
-  font-size: 2.5rem;
-  margin-bottom: 30px;
-  text-align: center;
-}
-
-.user-info {
-  background: rgba(255, 255, 255, 0.1);
-  padding: 30px;
-  border-radius: 16px;
-  margin-bottom: 30px;
-  backdrop-filter: blur(10px);
-}
-
-.user-info p {
-  font-size: 1.2rem;
-  margin: 10px 0;
-}
-
-.dashboard button {
-  padding: 14px 32px;
-  background: white;
-  color: var(--color-primary);
-  border: none;
-  border-radius: 8px;
-  font-size: 1.1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: transform 0.2s;
-}
-
-.dashboard button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  .gradient-warm {
+    background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-accent) 100%);
+  }
 }
